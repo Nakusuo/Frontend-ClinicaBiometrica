@@ -1,0 +1,17 @@
+<div class="videocall-container">
+  <div class="video-grid">
+    <div class="video-box remote">
+      <video #remoteVideo autoplay playsinline></video>
+      <span class="video-label">Paciente</span>
+    </div>
+    <div class="video-box local">
+      <video #localVideo autoplay muted playsinline></video>
+      <span class="video-label">Doctor</span>
+    </div>
+  </div>
+  <mat-error *ngIf="callError">{{ callError }}</mat-error>
+  <div class="call-controls">
+    <button mat-raised-button color="primary" (click)="startCall()" [disabled]="inCall">Iniciar llamada</button>
+    <button mat-raised-button color="warn" (click)="endCall()" [disabled]="!inCall">Finalizar llamada</button>
+  </div>
+</div>

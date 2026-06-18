@@ -1,0 +1,30 @@
+<div class="expedient-container">
+  <mat-card *ngIf="patient" class="patient-card">
+    <mat-card-header>
+      <mat-card-title>{{ patient.nombre }} {{ patient.apellido }}</mat-card-title>
+      <mat-card-subtitle>DNI: {{ patient.dni }}</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <p><strong>Fecha de nacimiento:</strong> {{ patient.fechaNacimiento }}</p>
+      <p *ngIf="patient.telefono"><strong>Teléfono:</strong> {{ patient.telefono }}</p>
+      <p *ngIf="patient.email"><strong>Email:</strong> {{ patient.email }}</p>
+    </mat-card-content>
+  </mat-card>
+
+  <h2>Expediente Médico</h2>
+
+  <mat-spinner *ngIf="loading"></mat-spinner>
+
+  <mat-card *ngFor="let exp of expedients" class="expedient-card">
+    <mat-card-header>
+      <mat-card-title>{{ exp.diagnostico }}</mat-card-title>
+      <mat-card-subtitle>{{ exp.fecha }}</mat-card-subtitle>
+    </mat-card-header>
+    <mat-card-content>
+      <p><strong>Tratamiento:</strong> {{ exp.tratamiento }}</p>
+      <p *ngIf="exp.observaciones"><strong>Observaciones:</strong> {{ exp.observaciones }}</p>
+    </mat-card-content>
+  </mat-card>
+
+  <p *ngIf="!loading && expedients.length === 0">No hay registros en el expediente.</p>
+</div>
