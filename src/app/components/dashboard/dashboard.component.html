@@ -1,0 +1,43 @@
+<mat-toolbar color="primary">
+  <span>Telemedicina - Dashboard</span>
+  <span class="spacer"></span>
+  <span *ngIf="doctor">Dr. {{ doctor.nombre }} {{ doctor.apellido }}</span>
+  <button mat-icon-button (click)="logout()" matTooltip="Cerrar sesión">
+    <mat-icon>exit_to_app</mat-icon>
+  </button>
+</mat-toolbar>
+
+<div class="dashboard-content">
+  <h2>Citas programadas</h2>
+
+  <mat-spinner *ngIf="loading"></mat-spinner>
+
+  <div class="appointments-grid" *ngIf="!loading">
+    <mat-card *ngFor="let cita of appointments" class="appointment-card">
+      <mat-card-header>
+        <mat-card-title>{{ cita.motivo }}</mat-card-title>
+        <mat-card-subtitle>{{ cita.fecha }} - {{ cita.hora }}</mat-card-subtitle>
+      </mat-card-header>
+
+      <mat-card-content>
+        <mat-chip-listbox>
+          <mat-chip [color]="cita.estado === 'programada' ? 'primary' : 'accent'" selected>
+            {{ cita.estado }}
+          </mat-chip>
+        </mat-chip-listbox>
+      </mat-card-content>
+
+      <mat-card-actions align="end">
+        <button mat-button color="primary" (click)="navigateToPatientForm(cita.id)">
+          Identificar paciente
+        </button>
+        <button mat-raised-button color="accent" (click)="startVideocall(cita.id)"
+                [disabled]="cita.estado !== 'programada'">
+          Iniciar videollamada
+        </button>
+      </mat-card-actions>
+    </mat-card>
+
+    <p *ngIf="appointments.length === 0">No hay citas programadas.</p>
+  </div>
+</div>

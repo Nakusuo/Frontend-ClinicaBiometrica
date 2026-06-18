@@ -1,0 +1,25 @@
+<div class="login-container">
+  <mat-card class="login-card">
+    <mat-card-header>
+      <mat-card-title>Login Biométrico</mat-card-title>
+      <mat-card-subtitle>Telemedicina Integrada</mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content>
+      <div class="video-wrapper">
+        <video #video autoplay muted playsinline></video>
+      </div>
+
+      <mat-error *ngIf="error">{{ error }}</mat-error>
+    </mat-card-content>
+
+    <mat-card-actions align="end">
+      <button mat-raised-button color="primary" (click)="startCamera()" [disabled]="loading || cameraActive">
+        Activar cámara
+      </button>
+      <button mat-raised-button color="accent" (click)="captureAndLogin()" [disabled]="loading || !cameraActive">
+        Iniciar sesión
+      </button>
+    </mat-card-actions>
+  </mat-card>
+</div>
