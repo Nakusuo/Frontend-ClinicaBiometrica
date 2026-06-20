@@ -15,6 +15,26 @@ export class DashboardComponent implements OnInit {
   appointments: Appointment[] = [];
   loading = true;
 
+  // New mockup fields
+  availabilityStatus = 'Disponible';
+  incomingCall: any = {
+    id: 1,
+    patientName: 'Carlos Ruiz',
+    reason: 'Consulta Rápida Post-Operativa',
+    patientId: 1
+  };
+
+  mockAppointments = [
+    { id: 101, patientName: 'Ana Martinez', age: 27, time: '10:00 AM', status: 'programada' },
+    { id: 102, patientName: 'Luis García', age: 79, time: '11:15 AM', status: 'en_curso' },
+    { id: 103, patientName: 'Elena Torres', age: 43, time: '12:00 PM', status: 'programada' }
+  ];
+
+  recentHistory = [
+    { patientName: 'Sofia Mendez', date: 'Ayer', diagnostic: 'Control de hipertensión' },
+    { patientName: 'Pedro Alva', date: '17 Jun', diagnostic: 'Revisión anual' }
+  ];
+
   constructor(
     private authService: AuthService,
     private apiService: ApiService,
@@ -22,12 +42,13 @@ export class DashboardComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.authService.currentUser$.subscribe(doc => {
-      this.doctor = doc;
-      if (doc) {
-        this.loadAppointments(doc.id);
-      }
-    });
+    const user = this.authService.getCurrentUser();
+    this.doctor = user;
+    if (user) {
+      this.loadAppointments(user.id);
+    } else {
+      this.router.navigate(['/login']);
+    }
   }
 
   loadAppointments(doctorId: number): void {
@@ -40,6 +61,18 @@ export class DashboardComponent implements OnInit {
         this.loading = false;
       },
     });
+  }
+
+  setAvailability(status: string): void {
+    this.availabilityStatus = status;
+  }
+
+  acceptCall(appointmentId: number): void {
+    this.router.navigate(['/videocall', appointmentId]);
+  }
+
+  rejectCall(): void {
+    this.incomingCall = null;
   }
 
   navigateToPatientForm(appointmentId: number): void {

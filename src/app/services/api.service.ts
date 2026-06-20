@@ -26,6 +26,10 @@ export class ApiService {
     return this.http.get<Appointment[]>(`${this.apiUrl}/citas/doctor/${doctorId}`);
   }
 
+  getCitasPaciente(patientId: number): Observable<Appointment[]> {
+    return this.http.get<Appointment[]>(`${this.apiUrl}/citas/paciente/${patientId}`);
+  }
+
   getCita(id: number): Observable<Appointment> {
     return this.http.get<Appointment>(`${this.apiUrl}/citas/${id}`);
   }
