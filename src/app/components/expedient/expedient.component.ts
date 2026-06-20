@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../services/api.service';
+import { AuthService } from '../../services/auth.service';
 import { Patient } from '../../models/patient';
 import { Expedient } from '../../models/expedient';
 
@@ -13,16 +14,37 @@ export class ExpedientComponent implements OnInit {
   patient: Patient | null = null;
   expedients: Expedient[] = [];
   loading = true;
+  role: 'doctor' | 'paciente' | null = null;
+  patientId = 0;
 
   constructor(
     private route: ActivatedRoute,
-    private apiService: ApiService
+    private router: Router,
+    private apiService: ApiService,
+    private authService: AuthService
   ) {}
 
   ngOnInit(): void {
-    const patientId = Number(this.route.snapshot.paramMap.get('id'));
-    this.loadPatient(patientId);
-    this.loadExpedients(patientId);
+    this.patientId = Number(this.route.snapshot.paramMap.get('id'));
+    this.role = this.authService.getUserRole();
+    this.loadPatient(this.patientId);
+    this.loadExpedients(this.patientId);
+  }
+
+  getAge(birthDateString?: string): string {
+    if (!birthDateString) return '28 años';
+    try {
+      const today = new Date();
+      const birthDate = new Date(birthDateString);
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      return age + ' años';
+    } catch {
+      return '28 años';
+    }
   }
 
   loadPatient(id: number): void {
@@ -43,5 +65,17 @@ export class ExpedientComponent implements OnInit {
         this.loading = false;
       },
     });
+  }
+
+  editExpedient(): void {
+    this.router.navigate(['/expedient-editor', this.patientId, 0]);
+  }
+
+  goBack(): void {
+    if (this.role === 'doctor') {
+      this.router.navigate(['/dashboard']);
+    } else {
+      this.router.navigate(['/patient-dashboard']);
+    }
   }
 }

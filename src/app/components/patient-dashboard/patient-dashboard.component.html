@@ -1,0 +1,164 @@
+<div class="bg-background text-on-background min-h-screen font-roboto pb-24 md:pb-0">
+  <!-- TopAppBar -->
+  <nav class="sticky top-0 z-50 bg-white border-b border-outline-variant/30 h-16 flex items-center shadow-sm">
+    <div class="flex justify-between items-center w-full px-6 md:px-12 max-w-7xl mx-auto">
+      <div class="flex items-center gap-4">
+        <span class="material-symbols-outlined text-primary text-2xl lg:hidden">menu</span>
+        <span class="text-xl md:text-2xl font-bold text-primary">Mi consulta</span>
+      </div>
+      <div class="hidden lg:flex gap-8">
+        <a class="text-primary font-bold text-sm" href="#">Inicio</a>
+        <a class="text-on-surface-variant hover:bg-primary-container/10 transition-all text-sm rounded px-3 py-1 font-medium" href="#">Videollamadas</a>
+        <a class="text-on-surface-variant hover:bg-primary-container/10 transition-all text-sm rounded px-3 py-1 font-medium" href="#">Historial Médico</a>
+      </div>
+      <div class="flex items-center gap-4">
+        <button (click)="logout()" class="text-on-surface-variant hover:bg-surface-container-highest p-2 rounded-full transition-all" title="Cerrar sesión">
+          <span class="material-symbols-outlined">logout</span>
+        </button>
+        <div class="w-10 h-10 rounded-full overflow-hidden border-2 border-primary-container bg-sky-100 flex items-center justify-center font-bold text-sky-800">
+          {{ patient?.nombre?.[0] }}{{ patient?.apellido?.[0] }}
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="max-w-7xl mx-auto px-6 md:px-12 py-8">
+    
+    <!-- Welcome Header -->
+    <header class="mb-8" *ngIf="patient">
+      <h1 class="text-3xl md:text-4xl font-bold text-primary mb-2">Hola, {{ patient.nombre }}</h1>
+      <p class="text-base text-on-surface-variant">Aquí tienes el resumen de tu salud para hoy.</p>
+    </header>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      
+      <!-- Section 1: Próxima cita (Bento Focus Card) -->
+      <section class="lg:col-span-5 w-full space-y-4">
+        <div class="bg-surface-container-lowest rounded-2xl shadow-sm border border-outline-variant/30 overflow-hidden">
+          <div class="p-6">
+            
+            <div *ngIf="loading" class="flex justify-center py-12">
+              <mat-spinner diameter="40"></mat-spinner>
+            </div>
+
+            <div *ngIf="!loading && appointments.length === 0" class="text-center py-8 text-on-surface-variant">
+              <span class="material-symbols-outlined text-4xl block mb-2 text-slate-400">event_busy</span>
+              <p class="text-sm">No tienes consultas programadas.</p>
+            </div>
+
+            <div *ngIf="!loading && appointments.length > 0">
+              <!-- Header -->
+              <div class="flex justify-between items-start mb-6">
+                <h2 class="text-lg font-bold text-on-surface">Próxima cita</h2>
+                <span class="bg-error-container text-on-error-container px-3 py-1 rounded-full text-xs font-semibold animate-pulse">
+                  Próximamente
+                </span>
+              </div>
+
+              <!-- Doctor card body -->
+              <div class="flex items-center gap-4 mb-6">
+                <div class="w-16 h-16 rounded-2xl overflow-hidden bg-sky-100 flex items-center justify-center text-primary font-bold text-xl shadow-inner">
+                  Dr
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold text-primary">Dr. de Turno</h3>
+                  <p class="text-xs text-on-surface-variant">Consulta Virtual General</p>
+                  <div class="flex items-center gap-2 mt-1 text-primary">
+                    <span class="material-symbols-outlined text-sm">calendar_today</span>
+                    <span class="text-xs font-bold">{{ appointments[0].fecha }} a las {{ appointments[0].hora }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Action buttons -->
+              <div class="space-y-3">
+                <button (click)="joinVideocall(appointments[0].id)" 
+                        class="w-full py-3.5 bg-[#2E7D32] hover:bg-[#1B5E20] text-white rounded-xl text-sm font-bold flex items-center justify-center gap-3 transition-all transform active:scale-95 shadow-md">
+                  <span class="material-symbols-outlined text-base" style="font-variation-settings: 'FILL' 1;">video_call</span>
+                  Click to Call
+                </button>
+                <button (click)="viewMyExpedient()" 
+                        class="w-full py-3 border border-outline text-primary hover:bg-primary/5 rounded-xl text-xs font-semibold transition-all">
+                  Ver expediente médico
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Quick Stats Bento Add-ons -->
+        <div class="grid grid-cols-2 gap-4">
+          <div class="bg-secondary-fixed bg-teal-50 text-teal-950 p-5 rounded-2xl flex flex-col justify-between h-32 shadow-sm border border-teal-100/50">
+            <span class="material-symbols-outlined text-teal-700">monitor_heart</span>
+            <div>
+              <p class="text-xs font-medium opacity-80">Ritmo Cardíaco</p>
+              <p class="text-lg font-bold">72 BPM</p>
+            </div>
+          </div>
+          <div class="bg-tertiary-fixed bg-amber-50 text-amber-950 p-5 rounded-2xl flex flex-col justify-between h-32 shadow-sm border border-amber-100/50">
+            <span class="material-symbols-outlined text-amber-700">pill</span>
+            <div>
+              <p class="text-xs font-medium opacity-80">Siguiente Dosis</p>
+              <p class="text-lg font-bold">18:00 PM</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section 2: Historial / Otras consultas -->
+      <section class="lg:col-span-7 w-full bg-white rounded-2xl p-6 shadow-sm border border-outline-variant/30">
+        <h2 class="text-xl font-bold text-primary mb-6 flex items-center gap-2">
+          <span class="material-symbols-outlined text-secondary">clinical_notes</span>
+          Mi Historial de Consultas
+        </h2>
+
+        <div *ngIf="loading" class="flex justify-center py-8">
+          <mat-spinner diameter="35"></mat-spinner>
+        </div>
+
+        <div *ngIf="!loading && appointments.length <= 1" class="text-center py-12 text-on-surface-variant">
+          <span class="material-symbols-outlined text-4xl block mb-2 text-slate-300">history</span>
+          <p class="text-sm">No hay consultas previas registradas.</p>
+        </div>
+
+        <div *ngIf="!loading && appointments.length > 1" class="space-y-4">
+          <div *ngFor="let cita of appointments.slice(1)" class="p-4 bg-surface-container-low rounded-xl flex items-center justify-between border border-slate-100 hover:border-slate-200 transition-all">
+            <div class="space-y-1">
+              <span class="text-xs uppercase tracking-wider font-bold text-slate-400">Consulta</span>
+              <h3 class="text-sm font-bold text-slate-800">{{ cita.motivo }}</h3>
+              <p class="text-xs text-slate-500">{{ cita.fecha }} - {{ cita.hora }}</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="px-3 py-1 rounded-full text-xs font-bold capitalize"
+                    [ngClass]="{
+                      'bg-slate-200 text-slate-600': cita.estado === 'finalizada',
+                      'bg-red-100 text-red-600': cita.estado === 'cancelada',
+                      'bg-blue-100 text-blue-600': cita.estado === 'programada'
+                    }">
+                {{ cita.estado }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Mobile Footer Navigation -->
+  <nav class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface-container-highest flex items-center justify-around z-40 border-t border-outline-variant/50">
+    <div class="flex flex-col items-center text-primary font-bold cursor-pointer">
+      <span class="material-symbols-outlined">dashboard</span>
+      <span class="text-[10px] font-semibold mt-1">Dashboard</span>
+    </div>
+    <div class="flex flex-col items-center text-on-surface-variant cursor-pointer" (click)="viewMyExpedient()">
+      <span class="material-symbols-outlined">medical_information</span>
+      <span class="text-[10px] font-semibold mt-1">Expediente</span>
+    </div>
+    <div class="flex flex-col items-center text-on-surface-variant cursor-pointer" (click)="logout()">
+      <span class="material-symbols-outlined">logout</span>
+      <span class="text-[10px] font-semibold mt-1">Salir</span>
+    </div>
+  </nav>
+</div>

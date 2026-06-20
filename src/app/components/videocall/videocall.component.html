@@ -1,17 +1,97 @@
-<div class="videocall-container">
-  <div class="video-grid">
-    <div class="video-box remote">
-      <video #remoteVideo autoplay playsinline></video>
-      <span class="video-label">Paciente</span>
+<div class="relative w-full h-screen bg-slate-950 overflow-hidden font-roboto text-white flex flex-col">
+  
+  <!-- Call Header Overlay -->
+  <header class="absolute top-0 left-0 right-0 z-30 bg-gradient-to-b from-black/80 to-transparent p-6 flex justify-between items-center">
+    <div class="flex items-center gap-3">
+      <button (click)="endCall()" class="material-symbols-outlined hover:bg-white/10 p-2 rounded-full transition-all text-white">
+        arrow_back
+      </button>
+      <div>
+        <h1 class="text-lg font-bold" *ngIf="patient">{{ patient.nombre }} {{ patient.apellido }}</h1>
+        <p class="text-xs text-slate-300">Teleconsulta Activa • HD Quality</p>
+      </div>
     </div>
-    <div class="video-box local">
-      <video #localVideo autoplay muted playsinline></video>
-      <span class="video-label">Doctor</span>
+    <div class="flex items-center gap-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-semibold animate-pulse">
+      <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+      Conectado
+    </div>
+  </header>
+
+  <!-- Main Video Area (Remote Video) -->
+  <div class="flex-grow w-full h-full relative">
+    <video #remoteVideo autoplay playsinline class="w-full h-full object-cover"></video>
+    
+    <!-- If remote stream is not loaded yet, show a clean mockup background -->
+    <div *ngIf="!inCall" class="absolute inset-0 bg-slate-900/90 flex flex-col items-center justify-center gap-4 z-10">
+      <mat-spinner diameter="50" color="accent"></mat-spinner>
+      <p class="text-sm text-slate-400">Conectando con el paciente...</p>
+    </div>
+
+    <!-- Error message banner -->
+    <div *ngIf="callError" class="absolute inset-x-6 top-20 z-40 bg-red-500/95 text-white px-4 py-3 rounded-xl text-sm flex items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined">error</span>
+        <span>{{ callError }}</span>
+      </div>
+      <button (click)="startCall()" class="underline font-bold text-xs bg-black/10 px-3 py-1 rounded-lg">Reintentar</button>
+    </div>
+
+    <!-- Floating PIP Local Video (Own Feed) -->
+    <div class="absolute bottom-32 md:bottom-28 right-6 z-20 transition-all duration-300">
+      <video #localVideo autoplay muted playsinline 
+             [ngClass]="videoMuted ? 'opacity-20 bg-slate-800' : 'opacity-100'"
+             class="w-28 h-36 md:w-40 md:h-52 rounded-2xl border-2 border-white/90 object-cover shadow-2xl bg-black transition-all"></video>
+      <span class="absolute bottom-2 left-2 bg-black/60 px-2 py-0.5 rounded text-[10px] font-semibold">Tú</span>
     </div>
   </div>
-  <mat-error *ngIf="callError">{{ callError }}</mat-error>
-  <div class="call-controls">
-    <button mat-raised-button color="primary" (click)="startCall()" [disabled]="inCall">Iniciar llamada</button>
-    <button mat-raised-button color="warn" (click)="endCall()" [disabled]="!inCall">Finalizar llamada</button>
+
+  <!-- Floating Call Control Panel Overlay -->
+  <div class="absolute bottom-6 inset-x-0 z-30 flex flex-col items-center gap-4 px-6">
+    
+    <!-- Floating Toolbar -->
+    <div class="flex items-center gap-4 bg-slate-900/90 backdrop-blur-md px-6 py-3.5 rounded-full border border-white/10 shadow-2xl">
+      <!-- Toggle Audio -->
+      <button (click)="toggleAudio()" 
+              [ngClass]="audioMuted ? 'bg-red-600 hover:bg-red-700' : 'bg-white/10 hover:bg-white/20'"
+              class="w-12 h-12 rounded-full flex items-center justify-center transition-all cursor-pointer">
+        <span class="material-symbols-outlined text-xl text-white">
+          {{ audioMuted ? 'mic_off' : 'mic' }}
+        </span>
+      </button>
+
+      <!-- Toggle Video -->
+      <button (click)="toggleVideo()" 
+              [ngClass]="videoMuted ? 'bg-red-600 hover:bg-red-700' : 'bg-white/10 hover:bg-white/20'"
+              class="w-12 h-12 rounded-full flex items-center justify-center transition-all cursor-pointer">
+        <span class="material-symbols-outlined text-xl text-white">
+          {{ videoMuted ? 'videocam_off' : 'videocam' }}
+        </span>
+      </button>
+
+      <!-- End Call Button (Red Circle Phone Down) -->
+      <button (click)="endCall()" 
+              class="w-14 h-14 bg-red-600 hover:bg-red-700 rounded-full flex items-center justify-center transition-all transform active:scale-95 shadow-lg shadow-red-900/40 cursor-pointer">
+        <span class="material-symbols-outlined text-2xl text-white">
+          call_end
+        </span>
+      </button>
+    </div>
+
+    <!-- Contextual Medical Record Summary Box (Doctor only) -->
+    <div *ngIf="role === 'doctor' && patient" 
+         class="w-full max-w-md bg-slate-900/90 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 flex items-center justify-between gap-4 shadow-xl">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-secondary-container">folder_shared</span>
+        <div class="text-left">
+          <h3 class="text-xs font-bold text-slate-300">Expediente Médico: {{ patient.nombre }}</h3>
+          <p class="text-[10px] text-slate-400">Última edición hace 2 días</p>
+        </div>
+      </div>
+      <button (click)="goToEditor()" 
+              class="bg-secondary hover:bg-secondary/90 text-white font-bold text-xs px-4 py-2 rounded-xl transition-all shadow-sm">
+        Escribir Diagnóstico
+      </button>
+    </div>
+
   </div>
 </div>
