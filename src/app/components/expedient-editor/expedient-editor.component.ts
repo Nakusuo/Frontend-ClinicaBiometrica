@@ -59,10 +59,11 @@ export class ExpedientEditorComponent implements OnInit {
   }
 
   getAge(birthDateString?: string): string {
-    if (!birthDateString) return '28 años';
+    if (!birthDateString) return 'No especificada';
     try {
       const today = new Date();
       const birthDate = new Date(birthDateString);
+      if (isNaN(birthDate.getTime())) return 'No especificada';
       let age = today.getFullYear() - birthDate.getFullYear();
       const m = today.getMonth() - birthDate.getMonth();
       if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
@@ -70,7 +71,7 @@ export class ExpedientEditorComponent implements OnInit {
       }
       return age + ' años';
     } catch {
-      return '28 años';
+      return 'No especificada';
     }
   }
 

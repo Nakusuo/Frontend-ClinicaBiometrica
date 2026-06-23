@@ -19,6 +19,7 @@ export class PatientRegisterComponent implements OnDestroy {
   showPassword = false;
   loading = false;
   registerForm: FormGroup;
+  error = '';
   private stream: MediaStream | null = null;
   private capturedEmbeddings: number[][] = [];
 
@@ -63,6 +64,7 @@ export class PatientRegisterComponent implements OnDestroy {
     this.isCapturing = false;
     this.captures = 0;
     this.capturedEmbeddings = [];
+    this.error = '';
 
     // Let template render video element first, then start camera
     setTimeout(async () => {
@@ -75,7 +77,7 @@ export class PatientRegisterComponent implements OnDestroy {
       } catch (err) {
         console.error('Error al iniciar cámara:', err);
         this.loading = false;
-        alert('No se pudo acceder a la cámara o cargar los modelos.');
+        this.error = 'No se pudo acceder a la cámara o cargar los modelos.';
       }
     }, 100);
   }
@@ -85,6 +87,7 @@ export class PatientRegisterComponent implements OnDestroy {
     this.isCapturing = false;
     this.captures = 0;
     this.capturedEmbeddings = [];
+    this.error = '';
     if (this.stream) {
       this.biometricService.stopCamera(this.stream);
       this.stream = null;
@@ -94,17 +97,18 @@ export class PatientRegisterComponent implements OnDestroy {
   async captureSample(): Promise<void> {
     if (this.captures >= 3 || !this.stream || this.loading) return;
     this.loading = true;
+    this.error = '';
     try {
       const embedding = await this.biometricService.detectFace(this.videoRef.nativeElement);
       if (embedding) {
         this.capturedEmbeddings.push(Array.from(embedding));
         this.captures++;
       } else {
-        alert('No se detectó ningún rostro en la cámara. Por favor enfóquese y vuelva a intentarlo.');
+        this.error = 'No se detectó ningún rostro en la cámara. Por favor enfóquese y vuelva a intentarlo.';
       }
     } catch (err) {
       console.error('Error en detección:', err);
-      alert('Ocurrió un error al procesar el rostro.');
+      this.error = 'Ocurrió un error al procesar el rostro.';
     } finally {
       this.loading = false;
     }
@@ -117,6 +121,7 @@ export class PatientRegisterComponent implements OnDestroy {
   register(): void {
     if (this.registerForm.invalid || this.capturedEmbeddings.length < 3) return;
     this.loading = true;
+    this.error = '';
 
     // Calcular el promedio de los 3 embeddings capturados
     const numFeatures = this.capturedEmbeddings[0].length;
@@ -143,7 +148,7 @@ export class PatientRegisterComponent implements OnDestroy {
       error: (err) => {
         console.error('Error de registro:', err);
         this.loading = false;
-        alert('Error al registrar al paciente.');
+        this.error = 'Error al registrar al paciente.';
       }
     });
   }
@@ -164,6 +169,7 @@ export class PatientRegisterComponent implements OnDestroy {
     ];
     this.captures = 3;
     this.isCapturing = false;
+    this.error = '';
     this.stopCamera();
   }
 

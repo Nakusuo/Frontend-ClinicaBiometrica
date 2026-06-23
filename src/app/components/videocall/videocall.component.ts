@@ -17,7 +17,7 @@ export class VideocallComponent implements OnInit, OnDestroy {
   inCall = false;
   callError = '';
 
-  // Mockup elements
+  cita: any = null;
   patient: Patient | null = null;
   role: 'doctor' | 'paciente' | null = null;
   audioMuted = false;
@@ -40,47 +40,68 @@ export class VideocallComponent implements OnInit, OnDestroy {
     this.webrtcService.streamEvent.subscribe(stream => {
       if (this.remoteVideoRef) this.remoteVideoRef.nativeElement.srcObject = stream;
     });
-    this.webrtcService.closeEvent.subscribe(() => { this.inCall = false; });
+    this.webrtcService.closeEvent.subscribe(() => { 
+      this.inCall = false; 
+      this.endCall();
+    });
     this.webrtcService.errorEvent.subscribe(err => { this.callError = err.message; });
-    
-    // Automatically start call on enter for visual presentation
-    setTimeout(() => {
-      this.startCall();
-    }, 500);
   }
 
   loadPatientFromAppointment(): void {
     this.apiService.getCita(this.appointmentId).subscribe({
       next: (cita) => {
+        this.cita = cita;
         this.apiService.getPaciente(cita.patientId).subscribe({
           next: (pat) => {
             this.patient = pat;
-          }
+            this.startCall();
+          },
+          error: () => this.fallbackSetup()
         });
       },
-      error: () => {
-        // Fallback for mock preview
-        this.patient = {
-          id: 1,
-          nombre: 'Carlos',
-          apellido: 'Ruiz',
-          dni: '76543210',
-          fechaNacimiento: '1981-05-15',
-          telefono: '+51 987 654 321',
-          email: 'carlos.ruiz@email.com',
-          direccion: 'Lima, Perú'
-        };
-      }
+      error: () => this.fallbackSetup()
     });
+  }
+
+  private fallbackSetup(): void {
+    this.patient = {
+      id: 1,
+      nombre: 'Carlos',
+      apellido: 'Ruiz',
+      dni: '76543210',
+      fechaNacimiento: '1981-05-15',
+      telefono: '+51 987 654 321',
+      email: 'carlos.ruiz@email.com',
+      direccion: 'Lima, Perú'
+    };
+    this.cita = {
+      id: this.appointmentId,
+      doctorId: 1,
+      patientId: 1
+    };
+    this.startCall();
   }
 
   async startCall(): Promise<void> {
     try {
+      if (!this.cita) return;
+      const currentUser = this.authService.getCurrentUser();
+      const currentUserId = currentUser ? currentUser.id : (this.role === 'doctor' ? this.cita.doctorId : this.cita.patientId);
+
+      const targetRole = this.role === 'doctor' ? 'paciente' : 'doctor';
+      const targetUserId = this.role === 'doctor' ? this.cita.patientId : this.cita.doctorId;
+      const initiator = this.role === 'paciente'; // Paciente inicia la llamada
+
       const localStream = await this.webrtcService.startLocalStream();
-      this.localVideoRef.nativeElement.srcObject = localStream;
-      this.webrtcService.createPeer(true);
+      if (this.localVideoRef) {
+        this.localVideoRef.nativeElement.srcObject = localStream;
+      }
+
+      this.webrtcService.connectSignaling(this.role!, currentUserId, targetRole, targetUserId);
+      this.webrtcService.createPeer(initiator, targetRole, targetUserId);
       this.inCall = true;
-    } catch { 
+    } catch (err: any) { 
+      console.error('Error starting WebRTC call:', err);
       this.callError = 'No se pudo iniciar la llamada. Otorgue permisos de cámara/micrófono.'; 
     }
   }
@@ -111,6 +132,7 @@ export class VideocallComponent implements OnInit, OnDestroy {
   }
 
   endCall(): void { 
+    this.apiService.terminarLlamada(this.appointmentId).subscribe();
     this.webrtcService.endCall(); 
     this.inCall = false; 
     if (this.role === 'doctor') {

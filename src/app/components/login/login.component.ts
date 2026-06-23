@@ -80,7 +80,7 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.loading = false;
         return;
       }
-      this.authService.loginFacial(Array.from(embedding), this.role).subscribe({
+      this.authService.loginFacial(this.email, Array.from(embedding), this.role).subscribe({
         next: (res) => {
           const userObj = this.role === 'doctor' ? (res.doctor || res.user || res) : (res.patient || res.user || res);
           this.authService.setSession(userObj, this.role);

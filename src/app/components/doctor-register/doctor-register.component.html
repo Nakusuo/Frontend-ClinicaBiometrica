@@ -116,6 +116,12 @@
               </span>
             </div>
 
+            <!-- Error message inline -->
+            <div *ngIf="error" class="bg-error-container text-on-error-container px-4 py-3 rounded-xl text-sm flex items-center justify-center gap-2 font-medium">
+              <span class="material-symbols-outlined text-error text-lg">error</span>
+              <span>{{ error }}</span>
+            </div>
+
             <!-- Capturar Muestra Button -->
             <button *ngIf="captures < 3" 
                     (click)="captureSample()" 
