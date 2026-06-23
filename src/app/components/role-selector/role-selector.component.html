@@ -1,0 +1,57 @@
+<div class="surface min-h-screen flex flex-col items-center font-roboto">
+
+  <main class="flex-grow w-full max-w-7xl px-4 md:px-12 flex flex-col items-center justify-center fade-in">
+    <header class="mb-8 text-center">
+      <div class="flex items-center justify-center gap-3 mb-4">
+        <span class="material-symbols-outlined text-primary text-4xl">health_and_safety</span>
+        <h1 class="text-2xl font-bold text-primary tracking-tight">Telemedicina Integrada</h1>
+      </div>
+      <h2 class="text-3xl font-bold text-on-surface-variant">¿Quién eres?</h2>
+      <p class="text-on-surface-variant mt-2 text-base">Selecciona tu perfil para continuar con el acceso.</p>
+    </header>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl mt-4">
+      <!-- Patient Card -->
+      <button class="role-card group relative bg-white border border-outline-variant/30 rounded-xl p-8 flex flex-col items-center text-center hover:bg-primary-container/5 focus:outline-none focus:ring-2 focus:ring-primary"
+              (click)="selectRole('paciente')">
+        <div class="w-24 h-24 mb-6 rounded-full bg-secondary-container/20 flex items-center justify-center group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-secondary text-5xl">people</span>
+        </div>
+        <h3 class="text-lg font-bold text-primary mb-2">Soy Paciente</h3>
+        <p class="text-on-surface-variant text-sm">Accede a tus citas, historial médico y consultas virtuales de manera rápida y segura.</p>
+        <div class="mt-6 px-6 py-2 rounded-full bg-primary text-on-primary text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+          ENTRAR COMO PACIENTE
+        </div>
+      </button>
+
+      <!-- Doctor Card -->
+      <button class="role-card group relative bg-white border border-outline-variant/30 rounded-xl p-8 flex flex-col items-center text-center hover:bg-primary-container/5 focus:outline-none focus:ring-2 focus:ring-primary"
+              (click)="selectRole('doctor')">
+        <div class="w-24 h-24 mb-6 rounded-full bg-primary-container/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+          <span class="material-symbols-outlined text-primary text-5xl">person_shield</span>
+        </div>
+        <h3 class="text-lg font-bold text-primary mb-2">Soy Doctor</h3>
+        <p class="text-on-surface-variant text-sm">Gestiona tus pacientes, recetas electrónicas y agenda médica con herramientas profesionales.</p>
+        <div class="mt-6 px-6 py-2 rounded-full bg-primary text-on-primary text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+          ENTRAR COMO MÉDICO
+        </div>
+      </button>
+    </div>
+
+    <!-- Background decorative -->
+    <div class="fixed top-0 left-0 w-full h-full -z-10 opacity-20 pointer-events-none">
+      <div class="absolute top-[10%] right-[5%] w-64 h-64 bg-secondary-container blur-[100px] rounded-full"></div>
+      <div class="absolute bottom-[10%] left-[5%] w-96 h-96 bg-primary-container blur-[120px] rounded-full"></div>
+    </div>
+  </main>
+
+  <footer class="w-full py-6 mt-8 text-center border-t border-outline-variant/10 fade-in">
+    <div class="flex flex-col md:flex-row items-center justify-center gap-4 text-xs text-on-surface-variant">
+      <a class="hover:text-primary transition-colors" href="#">Términos de Servicio</a>
+      <span class="hidden md:block w-1 h-1 bg-outline-variant rounded-full"></span>
+      <a class="hover:text-primary transition-colors" href="#">Política de Privacidad</a>
+      <span class="hidden md:block w-1 h-1 bg-outline-variant rounded-full"></span>
+      <p>&copy; 2024 Telemedicina Integrada. Todos los derechos reservados.</p>
+    </div>
+  </footer>
+</div>

@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+:host {
+  display: block;
+}
+
+.surface {
+  background-color: #f9f9fb;
+  color: #1a1c1d;
+}
+
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 48;
+}
+
+.text-primary { color: #003645; }
+.text-on-surface-variant { color: #41484b; }
+.text-secondary { color: #006876; }
+.text-on-primary { color: #ffffff; }
+.bg-primary { background-color: #003645; }
+.bg-secondary-container { background-color: #58e6ff; }
+.bg-primary-container { background-color: #1a4d5e; }
+.bg-surface { background-color: #f9f9fb; }
+.border-outline-variant { border-color: #c0c8cc; }
+.border-primary { border-color: #003645; }
+
+.bg-primary-container\/5:hover { background-color: rgba(26, 77, 94, 0.05); }
+.bg-secondary-container\/20 { background-color: rgba(88, 230, 255, 0.2); }
+.bg-primary-container\/10 { background-color: rgba(26, 77, 94, 0.1); }
+
+.fade-in {
+  animation: fadeIn 0.8s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.role-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.role-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.font-roboto {
+  font-family: 'Roboto', sans-serif;
+}

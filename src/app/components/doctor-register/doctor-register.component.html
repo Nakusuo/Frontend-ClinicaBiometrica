@@ -1,0 +1,189 @@
+<div class="surface min-h-screen font-roboto">
+  <!-- Header -->
+  <header class="bg-surface shadow-sm sticky top-0 z-50">
+    <div class="flex justify-between items-center w-full px-4 md:px-12 max-w-7xl mx-auto h-16">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-primary text-3xl">health_and_safety</span>
+        <span class="text-xl font-bold text-primary">Telemedicina Integrada</span>
+      </div>
+      <div class="hidden md:flex items-center gap-6">
+        <a class="text-xs text-on-surface-variant hover:text-primary transition-colors" href="#">Ayuda</a>
+        <a class="text-xs text-on-surface-variant hover:text-primary transition-colors" href="#">Soporte Técnico</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 md:px-12 py-6 min-h-[calc(100vh-64px)] flex items-center justify-center">
+    <div class="w-full max-w-3xl bg-white rounded-xl shadow-md border border-outline-variant/10 overflow-hidden">
+
+      <!-- Stepper -->
+      <div class="px-6 pt-6 pb-4 border-b border-outline-variant/20 bg-surface-container-low/50">
+        <div class="flex items-center justify-center gap-4">
+          <div class="flex items-center gap-2" [class.opacity-40]="currentStep !== 1">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300"
+                 [class.bg-primary]="currentStep === 1"
+                 [class.text-on-primary]="currentStep === 1"
+                 [class.bg-surface-container-highest]="currentStep !== 1"
+                 [class.text-on-surface-variant]="currentStep !== 1">1</div>
+            <span class="text-lg font-medium hidden sm:block"
+                  [class.text-primary]="currentStep === 1"
+                  [class.text-on-surface-variant]="currentStep !== 1">Datos Básicos</span>
+          </div>
+          <div class="w-12 h-[2px] bg-outline-variant"></div>
+          <div class="flex items-center gap-2" [class.opacity-40]="currentStep !== 2">
+            <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all duration-300"
+                 [class.bg-primary]="currentStep === 2"
+                 [class.text-on-primary]="currentStep === 2"
+                 [class.bg-surface-container-highest]="currentStep !== 2"
+                 [class.text-on-surface-variant]="currentStep !== 2">2</div>
+            <span class="text-lg font-medium hidden sm:block"
+                  [class.text-primary]="currentStep === 2"
+                  [class.text-on-surface-variant]="currentStep !== 2">Biometría Facial</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 1: Basic Info -->
+      <div *ngIf="currentStep === 1" class="p-6 md:p-8 space-y-4 step-transition">
+        <div class="text-center mb-6">
+          <h1 class="text-2xl font-bold text-on-surface">Registro de Profesional</h1>
+          <p class="text-sm text-on-surface-variant">Complete su información profesional para comenzar.</p>
+        </div>
+
+        <form [formGroup]="registerForm" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="space-y-2">
+            <label class="text-xs text-on-surface-variant">Nombre Completo</label>
+            <input formControlName="nombre" class="w-full bg-surface-container-low border-b-2 border-outline-variant focus:border-primary focus:ring-0 transition-all text-base px-4 py-2 rounded-t-lg" placeholder="Dr. Juan Pérez" type="text"/>
+          </div>
+          <div class="space-y-2">
+            <label class="text-xs text-on-surface-variant">Correo Electrónico</label>
+            <input formControlName="email" class="w-full bg-surface-container-low border-b-2 border-outline-variant focus:border-primary focus:ring-0 transition-all text-base px-4 py-2 rounded-t-lg" placeholder="juan.perez@clinica.com" type="email"/>
+          </div>
+          <div class="space-y-2">
+            <label class="text-xs text-on-surface-variant">Especialidad</label>
+            <select formControlName="especialidad" class="w-full bg-surface-container-low border-b-2 border-outline-variant focus:border-primary focus:ring-0 transition-all text-base px-4 py-2 rounded-t-lg appearance-none">
+              <option *ngFor="let spec of specialties" [value]="spec">{{ spec }}</option>
+            </select>
+          </div>
+          <div class="space-y-2">
+            <label class="text-xs text-on-surface-variant">ID Profesional (Cédula)</label>
+            <input formControlName="cedula" class="w-full bg-surface-container-low border-b-2 border-outline-variant focus:border-primary focus:ring-0 transition-all text-base px-4 py-2 rounded-t-lg" placeholder="12345678-A" type="text"/>
+          </div>
+          <div class="space-y-2">
+            <label class="text-xs text-on-surface-variant">Teléfono</label>
+            <input formControlName="telefono" class="w-full bg-surface-container-low border-b-2 border-outline-variant focus:border-primary focus:ring-0 transition-all text-base px-4 py-2 rounded-t-lg" placeholder="+52 55 1234 5678" type="tel"/>
+          </div>
+          <div class="space-y-2">
+            <label class="text-xs text-on-surface-variant">Contraseña</label>
+            <input formControlName="password" class="w-full bg-surface-container-low border-b-2 border-outline-variant focus:border-primary focus:ring-0 transition-all text-base px-4 py-2 rounded-t-lg" placeholder="••••••••" type="password"/>
+          </div>
+        </form>
+
+        <div class="flex justify-end pt-6">
+          <button class="bg-primary text-on-primary px-8 py-4 rounded-full text-lg font-medium flex items-center gap-2 hover:bg-primary-container transition-all active:scale-95"
+                  (click)="goToStep2()" [disabled]="registerForm.invalid">
+            Siguiente Paso
+            <span class="material-symbols-outlined">arrow_forward</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Biometric Capture -->
+      <div *ngIf="currentStep === 2" class="p-6 md:p-8 space-y-4 step-transition">
+        <div class="text-center mb-4">
+          <h2 class="text-2xl font-bold text-on-surface">Registra tu rostro</h2>
+          <p class="text-sm text-on-surface-variant max-w-md mx-auto">Posicione su cara dentro del marco para completar la validación de identidad.</p>
+        </div>
+
+        <div class="flex flex-col items-center justify-center gap-4">
+          <!-- Biometric Circle -->
+          <div class="relative w-[320px] h-[320px] md:w-[400px] md:h-[400px] rounded-full overflow-hidden border-4 border-outline-variant bg-surface-dim">
+            <video #video autoplay muted playsinline class="absolute inset-0 w-full h-full object-cover"></video>
+            <div class="absolute inset-0 z-20 face-scanning-animation pointer-events-none" *ngIf="isCapturing && captures < 3"></div>
+            <div class="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+              <div class="w-64 h-80 rounded-[100px] border-2 border-white/40 border-dashed"></div>
+            </div>
+          </div>
+
+          <!-- Status -->
+          <div class="w-full max-w-sm space-y-4 text-center">
+            <div class="flex items-center justify-center gap-2">
+              <span class="material-symbols-outlined text-secondary" [class.animate-pulse]="isCapturing && captures < 3">
+                {{ captures >= 3 ? 'check_circle' : 'search' }}
+              </span>
+              <span class="text-lg font-medium text-on-surface">
+                {{ captures >= 3 ? '¡Biometría completada!' : (isCapturing ? 'Buscando rostro...' : 'Iniciando captura...') }}
+              </span>
+            </div>
+
+            <!-- Error message inline -->
+            <div *ngIf="error" class="bg-error-container text-on-error-container px-4 py-3 rounded-xl text-sm flex items-center justify-center gap-2 font-medium">
+              <span class="material-symbols-outlined text-error text-lg">error</span>
+              <span>{{ error }}</span>
+            </div>
+
+            <!-- Capturar Muestra Button -->
+            <button *ngIf="captures < 3" 
+                    (click)="captureSample()" 
+                    [disabled]="loading || !isCapturing"
+                    class="w-full bg-secondary hover:bg-sky-800 text-white font-medium py-3 rounded-full transition-all shadow-sm flex items-center justify-center gap-2 disabled:bg-slate-300">
+              <span class="material-symbols-outlined text-base">photo_camera</span>
+              {{ loading ? 'Procesando...' : 'Capturar Muestra (' + captures + '/3)' }}
+            </button>
+
+            <!-- Simular Captura Button -->
+            <button *ngIf="captures < 3" 
+                    (click)="bypassCaptures()" 
+                    class="w-full bg-amber-600 hover:bg-amber-700 text-white font-medium py-3 rounded-full transition-all shadow-sm flex items-center justify-center gap-2 mt-2">
+              <span class="material-symbols-outlined text-base">face</span>
+              Simular Captura (Sin Cámara)
+            </button>
+
+            <div class="space-y-1">
+              <div class="flex justify-between items-center px-1">
+                <span class="text-xs text-on-surface-variant">Muestra {{ captures }}/3 capturada {{ captures > 0 ? '✓' : '' }}</span>
+                <span class="text-xs text-secondary font-bold">{{ progressPercent }}%</span>
+              </div>
+              <div class="w-full h-2 bg-surface-container-highest rounded-full overflow-hidden">
+                <div class="h-full bg-secondary rounded-full transition-all duration-500" [style.width.%]="progressPercent"></div>
+              </div>
+            </div>
+
+            <div class="flex justify-between items-center pt-4">
+              <button class="text-on-surface-variant text-xs hover:bg-surface-container-high px-4 py-2 rounded-full transition-colors flex items-center gap-2" (click)="goToStep1()">
+                <span class="material-symbols-outlined text-sm">arrow_back</span>
+                Atrás
+              </button>
+              <button class="px-8 py-4 rounded-full text-lg font-medium transition-all"
+                      [class.bg-primary]="captures >= 3"
+                      [class.text-on-primary]="captures >= 3"
+                      [class.bg-surface-container-highest]="captures < 3"
+                      [class.text-outline-variant]="captures < 3"
+                      [disabled]="captures < 3"
+                      (click)="register()">
+                Registrar
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Success Modal -->
+  <div *ngIf="showSuccessModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-8 text-center space-y-6">
+      <div class="w-20 h-20 bg-secondary-container text-on-secondary-container rounded-full flex items-center justify-center mx-auto">
+        <span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">verified</span>
+      </div>
+      <div class="space-y-2">
+        <h3 class="text-2xl font-bold text-on-surface">¡Registro Exitoso!</h3>
+        <p class="text-sm text-on-surface-variant">Su perfil ha sido creado. Un administrador verificará sus credenciales en las próximas 24 horas.</p>
+      </div>
+      <button class="w-full bg-primary text-on-primary py-4 rounded-full text-lg font-medium hover:bg-primary-container transition-all"
+              (click)="goToDashboard()">
+        Ir al Dashboard
+      </button>
+    </div>
+  </div>
+</div>

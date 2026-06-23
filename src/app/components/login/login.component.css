@@ -1,0 +1,31 @@
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background: #f5f5f5;
+}
+
+.login-card {
+  width: 400px;
+  padding: 24px;
+}
+
+.video-wrapper {
+  width: 100%;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #000;
+  margin: 16px 0;
+}
+
+video {
+  width: 100%;
+  display: block;
+}
+
+mat-card-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
