@@ -1,0 +1,13 @@
+.expedient-container {
+  padding: 24px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.patient-card {
+  margin-bottom: 24px;
+}
+
+.expedient-card {
+  margin-bottom: 16px;
+}

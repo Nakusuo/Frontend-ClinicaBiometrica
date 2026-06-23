@@ -1,0 +1,94 @@
+<div class="surface min-h-screen flex items-center justify-center font-roboto bg-slate-50">
+  <mat-card class="w-full max-w-[420px] p-8 rounded-2xl shadow-lg border border-slate-100 bg-white">
+    <div class="text-center mb-6">
+      <div class="flex items-center justify-center gap-2 mb-2 text-primary">
+        <span class="material-symbols-outlined text-3xl">health_and_safety</span>
+        <h1 class="text-xl font-bold text-primary">Telemedicina Integrada</h1>
+      </div>
+      <p class="text-xs text-on-surface-variant font-semibold">
+        {{ role === 'doctor' ? 'Portal de Especialistas - Acceso Biométrico' : 'Portal de Pacientes - Acceso Biométrico' }}
+      </p>
+    </div>
+
+    <!-- Step 1: Input Email -->
+    <div *ngIf="!showBiometrics" class="space-y-6">
+      <div class="space-y-2">
+        <label class="text-xs font-semibold text-slate-500">Identificación del {{ role === 'doctor' ? 'Médico' : 'Paciente' }} (Email)</label>
+        <div class="flex items-center px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+          <span class="material-symbols-outlined text-slate-400 mr-2 text-xl">mail</span>
+          <input #emailInput 
+                 (input)="email = emailInput.value" 
+                 [value]="email"
+                 (keyup.enter)="initiateBiometrics()"
+                 type="email" 
+                 class="w-full border-none focus:ring-0 bg-transparent p-0 text-slate-700 text-sm placeholder-slate-400 outline-none" 
+                 placeholder="doctor@hospital.com" />
+        </div>
+      </div>
+
+      <mat-error *ngIf="error" class="text-xs font-medium text-red-600 block mt-2">{{ error }}</mat-error>
+
+      <div class="space-y-3 pt-2">
+        <button (click)="initiateBiometrics()" 
+                [disabled]="!email || !email.includes('@')"
+                class="w-full py-3.5 bg-primary hover:bg-primary/5 hover:text-primary border border-primary text-white font-bold rounded-xl text-sm transition-all shadow-sm active:scale-95 duration-200 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined text-base">fingerprint</span>
+          Iniciar biometría
+        </button>
+        <button (click)="bypassLogin()" 
+                class="w-full py-3 border border-slate-200 text-slate-500 hover:bg-slate-100 rounded-xl text-xs font-semibold transition-all">
+          Bypass (Sin Cámara)
+        </button>
+      </div>
+
+      <p class="text-center text-xs text-slate-400 mt-4">
+        ¿No estás registrado? 
+        <a class="text-primary font-bold hover:underline" [routerLink]="role === 'doctor' ? '/doctor-register' : '/patient-register'">Regístrate aquí</a>
+      </p>
+      
+      <div class="text-center pt-2">
+        <a routerLink="/role-selector" class="text-xs text-slate-400 hover:text-primary transition-colors flex items-center justify-center gap-1">
+          <span class="material-symbols-outlined text-xs">arrow_back</span>
+          Volver a inicio
+        </a>
+      </div>
+    </div>
+
+    <!-- Step 2: Camera Capture -->
+    <div *ngIf="showBiometrics" class="space-y-6">
+      <div class="flex flex-col items-center justify-center">
+        <!-- Biometric Circle -->
+        <div class="relative w-64 h-64 rounded-full overflow-hidden border-4 border-outline-variant bg-slate-900 shadow-inner">
+          <video #video autoplay muted playsinline class="absolute inset-0 w-full h-full object-cover"></video>
+          <div class="absolute inset-0 z-20 face-scanning-animation pointer-events-none" *ngIf="cameraActive"></div>
+          <div class="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+            <div class="w-48 h-56 rounded-[100px] border border-white/30 border-dashed"></div>
+          </div>
+        </div>
+        
+        <p class="text-xs text-slate-500 mt-4 font-semibold animate-pulse text-center">
+          {{ cameraActive ? 'Capturando datos biométricos...' : 'Iniciando cámara...' }}
+        </p>
+      </div>
+
+      <mat-error *ngIf="error" class="text-xs font-medium text-red-600 block text-center">{{ error }}</mat-error>
+
+      <div class="space-y-3 pt-2">
+        <button (click)="captureAndLogin()" 
+                [disabled]="loading || !cameraActive"
+                class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition-all shadow-md active:scale-95 duration-200 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none flex items-center justify-center gap-2">
+          <span *ngIf="loading" class="animate-spin border-2 border-white/30 border-t-white w-4 h-4 rounded-full"></span>
+          Comparar y Autenticar
+        </button>
+        <button (click)="bypassLogin()" 
+                class="w-full py-3 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-sm transition-all shadow-md">
+          Bypass (Sin Cámara)
+        </button>
+        <button (click)="cancelBiometrics()" 
+                class="w-full py-3.5 border border-slate-200 text-slate-500 hover:bg-slate-100 rounded-xl text-xs font-semibold transition-all">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </mat-card>
+</div>
