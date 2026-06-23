@@ -80,12 +80,12 @@
         </div>
 
         <div class="space-y-4">
-          <!-- Loop over mockAppointments (matching visual guide) -->
-          <div *ngFor="let cita of mockAppointments" 
+          <!-- Loop over actual appointments loaded from backend -->
+          <div *ngFor="let cita of appointments" 
                class="p-4 bg-surface-container-low hover:bg-surface-container-high/50 transition-all rounded-xl border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 bg-primary-container text-white rounded-full flex items-center justify-center font-bold text-sm">
-                {{ cita.patientName[0] }}{{ cita.patientName.split(' ')[1]?.[0] || '' }}
+                {{ cita.patientName ? cita.patientName[0] : '' }}{{ cita.patientName ? (cita.patientName.split(' ')[1]?.[0] || '') : '' }}
               </div>
               <div>
                 <h3 class="font-bold text-slate-800">{{ cita.patientName }}</h3>

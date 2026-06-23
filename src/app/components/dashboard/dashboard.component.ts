@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
@@ -10,19 +10,15 @@ import { Appointment } from '../../models/appointment';
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.css'],
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   doctor: Doctor | null = null;
   appointments: Appointment[] = [];
   loading = true;
 
-  // New mockup fields
+  // Habilitar campos en tiempo real vacíos al inicio
   availabilityStatus = 'Disponible';
-  incomingCall: any = {
-    id: 1,
-    patientName: 'Carlos Ruiz',
-    reason: 'Consulta Rápida Post-Operativa',
-    patientId: 1
-  };
+  incomingCall: any = null;
+  private ws: WebSocket | null = null;
 
   mockAppointments = [
     { id: 101, patientName: 'Ana Martinez', age: 27, time: '10:00 AM', status: 'programada' },
@@ -46,9 +42,40 @@ export class DashboardComponent implements OnInit {
     this.doctor = user;
     if (user) {
       this.loadAppointments(user.id);
+      this.connectWebSocket(user.id);
     } else {
       this.router.navigate(['/login']);
     }
+  }
+
+  connectWebSocket(doctorId: number): void {
+    const wsUrl = `ws://localhost:8000/ws/doctor/${doctorId}`;
+    console.log(`Doctor connecting to dashboard WS: ${wsUrl}`);
+    this.ws = new WebSocket(wsUrl);
+
+    this.ws.onmessage = (event) => {
+      const msg = JSON.parse(event.data);
+      console.log('Doctor WS Message received:', msg);
+      if (msg.type === 'call-request') {
+        this.incomingCall = {
+          id: msg.data.appointmentId,
+          patientName: msg.data.patientName,
+          reason: msg.data.reason || 'Consulta Médica',
+          patientId: msg.data.patientId
+        };
+      } else if (msg.type === 'call-ended') {
+        this.incomingCall = null;
+      }
+    };
+
+    this.ws.onclose = () => {
+      console.log('Doctor WS disconnected. Reconnecting in 3s...');
+      setTimeout(() => {
+        if (this.doctor) {
+          this.connectWebSocket(doctorId);
+        }
+      }, 3000);
+    };
   }
 
   loadAppointments(doctorId: number): void {
@@ -68,7 +95,16 @@ export class DashboardComponent implements OnInit {
   }
 
   acceptCall(appointmentId: number): void {
-    this.router.navigate(['/videocall', appointmentId]);
+    this.apiService.aceptarLlamada(appointmentId).subscribe({
+      next: () => {
+        this.disconnectWebSocket();
+        this.router.navigate(['/videocall', appointmentId]);
+      },
+      error: () => {
+        this.disconnectWebSocket();
+        this.router.navigate(['/videocall', appointmentId]);
+      }
+    });
   }
 
   rejectCall(): void {
@@ -83,8 +119,20 @@ export class DashboardComponent implements OnInit {
     this.router.navigate(['/videocall', appointmentId]);
   }
 
+  disconnectWebSocket(): void {
+    if (this.ws) {
+      this.ws.close();
+      this.ws = null;
+    }
+  }
+
   logout(): void {
+    this.disconnectWebSocket();
     this.authService.logout();
     this.router.navigate(['/login']);
+  }
+
+  ngOnDestroy(): void {
+    this.disconnectWebSocket();
   }
 }

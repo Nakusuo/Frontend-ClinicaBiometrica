@@ -46,4 +46,17 @@ export class ApiService {
   createExpediente(expedient: Expedient): Observable<Expedient> {
     return this.http.post<Expedient>(`${this.apiUrl}/expedientes`, expedient);
   }
+
+  // Llamadas / Click to Call
+  solicitarLlamada(pacienteId: number, citaId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/llamadas/solicitar`, { paciente_id: pacienteId, cita_id: citaId });
+  }
+
+  aceptarLlamada(citaId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/llamadas/${citaId}/aceptar`, {});
+  }
+
+  terminarLlamada(citaId: number): Observable<any> {
+    return this.http.post(`${this.apiUrl}/llamadas/${citaId}/terminar`, {});
+  }
 }

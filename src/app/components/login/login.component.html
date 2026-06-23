@@ -19,6 +19,7 @@
           <input #emailInput 
                  (input)="email = emailInput.value" 
                  [value]="email"
+                 (keyup.enter)="initiateBiometrics()"
                  type="email" 
                  class="w-full border-none focus:ring-0 bg-transparent p-0 text-slate-700 text-sm placeholder-slate-400 outline-none" 
                  placeholder="doctor@hospital.com" />

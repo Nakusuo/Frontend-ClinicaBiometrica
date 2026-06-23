@@ -16,8 +16,8 @@ export class AuthService {
 
   constructor(private http: HttpClient) {}
 
-  loginFacial(embedding: number[], role?: string): Observable<any> {
-    return this.http.post(`${this.apiUrl}/auth/facial-login`, { embedding, role });
+  loginFacial(correo: string, embedding_facial: number[], role?: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/auth/facial-login`, { correo, embedding_facial, role });
   }
 
   registerDoctor(doctor: any): Observable<any> {

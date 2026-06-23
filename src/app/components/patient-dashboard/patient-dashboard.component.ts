@@ -44,7 +44,18 @@ export class PatientDashboardComponent implements OnInit {
   }
 
   joinVideocall(appointmentId: number): void {
-    this.router.navigate(['/videocall', appointmentId]);
+    if (this.patient) {
+      this.apiService.solicitarLlamada(this.patient.id, appointmentId).subscribe({
+        next: () => {
+          this.router.navigate(['/videocall', appointmentId]);
+        },
+        error: () => {
+          this.router.navigate(['/videocall', appointmentId]);
+        }
+      });
+    } else {
+      this.router.navigate(['/videocall', appointmentId]);
+    }
   }
 
   viewMyExpedient(): void {
