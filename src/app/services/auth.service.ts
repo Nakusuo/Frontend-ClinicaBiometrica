@@ -28,12 +28,15 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/auth/register-patient`, patient);
   }
 
-  setSession(user: any, role: 'doctor' | 'paciente'): void {
+  setSession(user: any, role: 'doctor' | 'paciente', token?: string): void {
     this.loggedIn.next(true);
     this.currentUser.next(user);
     this.userRole.next(role);
     sessionStorage.setItem('user', JSON.stringify(user));
     sessionStorage.setItem('role', role);
+    if (token) {
+      sessionStorage.setItem('token', token);
+    }
     // Backward compatibility for components expecting 'doctor' key
     if (role === 'doctor') {
       sessionStorage.setItem('doctor', JSON.stringify(user));
@@ -47,6 +50,11 @@ export class AuthService {
     sessionStorage.removeItem('user');
     sessionStorage.removeItem('role');
     sessionStorage.removeItem('doctor');
+    sessionStorage.removeItem('token');
+  }
+
+  getToken(): string | null {
+    return sessionStorage.getItem('token');
   }
 
   isAuthenticated(): boolean {
