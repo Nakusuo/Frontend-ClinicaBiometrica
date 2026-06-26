@@ -33,6 +33,41 @@ export class PatientFormComponent implements OnInit {
       email: ['', Validators.email],
       direccion: [''],
     });
+
+    if (this.appointmentId) {
+      this.loading = true;
+      this.apiService.getCita(this.appointmentId).subscribe({
+        next: (cita) => {
+          if (cita && cita.patientId) {
+            const pId = cita.patientId;
+            this.apiService.getPaciente(pId).subscribe({
+              next: (patient) => {
+                if (patient) {
+                  this.patientForm.patchValue({
+                    nombre: patient.nombre || '',
+                    apellido: patient.apellido || '',
+                    dni: patient.dni || '',
+                    fechaNacimiento: patient.fechaNacimiento || '',
+                    telefono: patient.telefono || '',
+                    email: patient.email || '',
+                    direccion: patient.direccion || '',
+                  });
+                }
+                this.loading = false;
+              },
+              error: () => {
+                this.loading = false;
+              }
+            });
+          } else {
+            this.loading = false;
+          }
+        },
+        error: () => {
+          this.loading = false;
+        }
+      });
+    }
   }
 
   onSubmit(): void {
