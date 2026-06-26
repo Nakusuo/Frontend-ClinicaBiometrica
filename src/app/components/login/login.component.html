@@ -66,16 +66,22 @@
           </div>
         </div>
         
-        <p class="text-xs text-slate-500 mt-4 font-semibold animate-pulse text-center">
-          {{ cameraActive ? 'Capturando datos biométricos...' : 'Iniciando cámara...' }}
-        </p>
+        <!-- Liveness Status Message -->
+        <div class="mt-4 px-4 py-2 rounded-xl text-center text-xs font-semibold"
+             [ngClass]="livenessVerified ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'">
+          <span class="flex items-center justify-center gap-2">
+            <span *ngIf="!livenessVerified" class="animate-pulse w-2 h-2 rounded-full bg-amber-500"></span>
+            <span *ngIf="livenessVerified" class="material-symbols-outlined text-sm">verified_user</span>
+            {{ cameraActive ? livenessStatus : 'Iniciando cámara...' }}
+          </span>
+        </div>
       </div>
 
       <mat-error *ngIf="error" class="text-xs font-medium text-red-600 block text-center">{{ error }}</mat-error>
 
       <div class="space-y-3 pt-2">
         <button (click)="captureAndLogin()" 
-                [disabled]="loading || !cameraActive"
+                [disabled]="loading || !cameraActive || !livenessVerified"
                 class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm transition-all shadow-md active:scale-95 duration-200 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none flex items-center justify-center gap-2">
           <span *ngIf="loading" class="animate-spin border-2 border-white/30 border-t-white w-4 h-4 rounded-full"></span>
           Comparar y Autenticar

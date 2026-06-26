@@ -1,97 +1,252 @@
-<div class="relative w-full h-screen bg-slate-950 overflow-hidden font-roboto text-white flex flex-col">
+<div class="flex flex-row w-full h-screen bg-slate-950 overflow-hidden font-roboto text-white">
   
-  <!-- Call Header Overlay -->
-  <header class="absolute top-0 left-0 right-0 z-30 bg-gradient-to-b from-black/80 to-transparent p-6 flex justify-between items-center">
-    <div class="flex items-center gap-3">
-      <button (click)="endCall()" class="material-symbols-outlined hover:bg-white/10 p-2 rounded-full transition-all text-white">
-        arrow_back
-      </button>
-      <div>
-        <h1 class="text-lg font-bold" *ngIf="patient">{{ patient.nombre }} {{ patient.apellido }}</h1>
-        <p class="text-xs text-slate-300">Teleconsulta Activa • HD Quality</p>
-      </div>
-    </div>
-    <div class="flex items-center gap-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-semibold animate-pulse">
-      <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-      Conectado
-    </div>
-  </header>
-
-  <!-- Main Video Area (Remote Video) -->
-  <div class="flex-grow w-full h-full relative">
-    <video #remoteVideo autoplay playsinline class="w-full h-full object-cover"></video>
+  <!-- Left Side: Videocall Stream Area -->
+  <div class="relative flex-grow h-full flex flex-col" [ngClass]="showExpedient ? 'w-1/2 lg:w-3/5' : 'w-full'">
     
-    <!-- If remote stream is not loaded yet, show a clean mockup background -->
-    <div *ngIf="!inCall" class="absolute inset-0 bg-slate-900/90 flex flex-col items-center justify-center gap-4 z-10">
-      <mat-spinner diameter="50" color="accent"></mat-spinner>
-      <p class="text-sm text-slate-400">Conectando con el paciente...</p>
-    </div>
-
-    <!-- Error message banner -->
-    <div *ngIf="callError" class="absolute inset-x-6 top-20 z-40 bg-red-500/95 text-white px-4 py-3 rounded-xl text-sm flex items-center justify-between gap-4">
-      <div class="flex items-center gap-2">
-        <span class="material-symbols-outlined">error</span>
-        <span>{{ callError }}</span>
-      </div>
-      <button (click)="startCall()" class="underline font-bold text-xs bg-black/10 px-3 py-1 rounded-lg">Reintentar</button>
-    </div>
-
-    <!-- Floating PIP Local Video (Own Feed) -->
-    <div class="absolute bottom-32 md:bottom-28 right-6 z-20 transition-all duration-300">
-      <video #localVideo autoplay muted playsinline 
-             [ngClass]="videoMuted ? 'opacity-20 bg-slate-800' : 'opacity-100'"
-             class="w-28 h-36 md:w-40 md:h-52 rounded-2xl border-2 border-white/90 object-cover shadow-2xl bg-black transition-all"></video>
-      <span class="absolute bottom-2 left-2 bg-black/60 px-2 py-0.5 rounded text-[10px] font-semibold">Tú</span>
-    </div>
-  </div>
-
-  <!-- Floating Call Control Panel Overlay -->
-  <div class="absolute bottom-6 inset-x-0 z-30 flex flex-col items-center gap-4 px-6">
-    
-    <!-- Floating Toolbar -->
-    <div class="flex items-center gap-4 bg-slate-900/90 backdrop-blur-md px-6 py-3.5 rounded-full border border-white/10 shadow-2xl">
-      <!-- Toggle Audio -->
-      <button (click)="toggleAudio()" 
-              [ngClass]="audioMuted ? 'bg-red-600 hover:bg-red-700' : 'bg-white/10 hover:bg-white/20'"
-              class="w-12 h-12 rounded-full flex items-center justify-center transition-all cursor-pointer">
-        <span class="material-symbols-outlined text-xl text-white">
-          {{ audioMuted ? 'mic_off' : 'mic' }}
-        </span>
-      </button>
-
-      <!-- Toggle Video -->
-      <button (click)="toggleVideo()" 
-              [ngClass]="videoMuted ? 'bg-red-600 hover:bg-red-700' : 'bg-white/10 hover:bg-white/20'"
-              class="w-12 h-12 rounded-full flex items-center justify-center transition-all cursor-pointer">
-        <span class="material-symbols-outlined text-xl text-white">
-          {{ videoMuted ? 'videocam_off' : 'videocam' }}
-        </span>
-      </button>
-
-      <!-- End Call Button (Red Circle Phone Down) -->
-      <button (click)="endCall()" 
-              class="w-14 h-14 bg-red-600 hover:bg-red-700 rounded-full flex items-center justify-center transition-all transform active:scale-95 shadow-lg shadow-red-900/40 cursor-pointer">
-        <span class="material-symbols-outlined text-2xl text-white">
-          call_end
-        </span>
-      </button>
-    </div>
-
-    <!-- Contextual Medical Record Summary Box (Doctor only) -->
-    <div *ngIf="role === 'doctor' && patient" 
-         class="w-full max-w-md bg-slate-900/90 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 flex items-center justify-between gap-4 shadow-xl">
+    <!-- Call Header Overlay -->
+    <header class="absolute top-0 left-0 right-0 z-30 bg-gradient-to-b from-black/80 to-transparent p-6 flex justify-between items-center">
       <div class="flex items-center gap-3">
-        <span class="material-symbols-outlined text-secondary-container">folder_shared</span>
-        <div class="text-left">
-          <h3 class="text-xs font-bold text-slate-300">Expediente Médico: {{ patient.nombre }}</h3>
-          <p class="text-[10px] text-slate-400">Última edición hace 2 días</p>
+        <button (click)="endCall()" class="material-symbols-outlined hover:bg-white/10 p-2 rounded-full transition-all text-white cursor-pointer" title="Salir de la llamada">
+          arrow_back
+        </button>
+        <div>
+          <h1 class="text-lg font-bold" *ngIf="patient">{{ patient.nombre }} {{ patient.apellido }}</h1>
+          <p class="text-xs text-slate-300">Teleconsulta Activa • HD Quality</p>
         </div>
       </div>
-      <button (click)="goToEditor()" 
-              class="bg-secondary hover:bg-secondary/90 text-white font-bold text-xs px-4 py-2 rounded-xl transition-all shadow-sm">
-        Escribir Diagnóstico
-      </button>
+      <div class="flex items-center gap-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1 rounded-full text-xs font-semibold animate-pulse">
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        Conectado
+      </div>
+    </header>
+
+    <!-- Main Video Area (Remote Video) -->
+    <div class="flex-grow w-full h-full relative">
+      <video #remoteVideo autoplay playsinline class="w-full h-full object-cover"></video>
+      
+      <!-- If remote stream is not loaded yet, show a clean mockup background -->
+      <div *ngIf="!inCall" class="absolute inset-0 bg-slate-900/90 flex flex-col items-center justify-center gap-4 z-10">
+        <mat-spinner diameter="50" color="accent"></mat-spinner>
+        <p class="text-sm text-slate-400">Conectando con el paciente...</p>
+      </div>
+
+      <!-- Error message banner -->
+      <div *ngIf="callError" class="absolute inset-x-6 top-20 z-40 bg-red-500/95 text-white px-4 py-3 rounded-xl text-sm flex items-center justify-between gap-4">
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined">error</span>
+          <span>{{ callError }}</span>
+        </div>
+        <button (click)="startCall()" class="underline font-bold text-xs bg-black/10 px-3 py-1 rounded-lg">Reintentar</button>
+      </div>
+
+      <!-- Success message banner -->
+      <div *ngIf="successMessage" class="absolute inset-x-6 top-20 z-40 bg-emerald-600/95 text-white px-4 py-3 rounded-xl text-sm flex items-center gap-2">
+        <span class="material-symbols-outlined">check_circle</span>
+        <span>{{ successMessage }}</span>
+      </div>
+
+      <!-- Floating PIP Local Video (Own Feed) -->
+      <div class="absolute bottom-32 md:bottom-28 right-6 z-20 transition-all duration-300">
+        <video #localVideo autoplay muted playsinline 
+               [ngClass]="videoMuted ? 'opacity-20 bg-slate-800' : 'opacity-100'"
+               class="w-24 h-32 md:w-32 md:h-44 rounded-2xl border-2 border-white/90 object-cover shadow-2xl bg-black transition-all"></video>
+        <span class="absolute bottom-2 left-2 bg-black/60 px-2 py-0.5 rounded text-[10px] font-semibold">Tú</span>
+      </div>
     </div>
 
+    <!-- Floating Call Control Panel Overlay -->
+    <div class="absolute bottom-6 inset-x-0 z-30 flex flex-col items-center gap-4 px-6">
+      
+      <!-- Floating Toolbar -->
+      <div class="flex items-center gap-4 bg-slate-900/90 backdrop-blur-md px-6 py-3.5 rounded-full border border-white/10 shadow-2xl">
+        <!-- Toggle Audio -->
+        <button (click)="toggleAudio()" 
+                [ngClass]="audioMuted ? 'bg-red-600 hover:bg-red-700' : 'bg-white/10 hover:bg-white/20'"
+                class="w-12 h-12 rounded-full flex items-center justify-center transition-all cursor-pointer">
+          <span class="material-symbols-outlined text-xl text-white">
+            {{ audioMuted ? 'mic_off' : 'mic' }}
+          </span>
+        </button>
+
+        <!-- Toggle Video -->
+        <button (click)="toggleVideo()" 
+                [ngClass]="videoMuted ? 'bg-red-600 hover:bg-red-700' : 'bg-white/10 hover:bg-white/20'"
+                class="w-12 h-12 rounded-full flex items-center justify-center transition-all cursor-pointer">
+          <span class="material-symbols-outlined text-xl text-white">
+            {{ videoMuted ? 'videocam_off' : 'videocam' }}
+          </span>
+        </button>
+
+        <!-- End Call Button (Red Circle Phone Down) -->
+        <button (click)="endCall()" 
+                class="w-14 h-14 bg-red-600 hover:bg-red-700 rounded-full flex items-center justify-center transition-all transform active:scale-95 shadow-lg shadow-red-900/40 cursor-pointer"
+                title="Terminar Llamada">
+          <span class="material-symbols-outlined text-2xl text-white">
+            call_end
+          </span>
+        </button>
+      </div>
+
+      <!-- Contextual Medical Record Summary Box (Doctor only, only when panel is hidden) -->
+      <div *ngIf="role === 'doctor' && patient && !showExpedient" 
+           class="w-full max-w-md bg-slate-900/90 backdrop-blur-md px-5 py-3 rounded-2xl border border-white/10 flex items-center justify-between gap-4 shadow-xl">
+        <div class="flex items-center gap-3">
+          <span class="material-symbols-outlined text-teal-400">folder_shared</span>
+          <div class="text-left">
+            <h3 class="text-xs font-bold text-slate-300">Expediente Médico: {{ patient.nombre }}</h3>
+            <p class="text-[10px] text-slate-400">Última edición hace 2 días</p>
+          </div>
+        </div>
+        <button (click)="goToEditor()" 
+                class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-4 py-2 rounded-xl transition-all shadow-sm cursor-pointer">
+          Escribir Diagnóstico
+        </button>
+      </div>
+
+    </div>
   </div>
+
+  <!-- Right Side: Integrated Expediente Editor Side Panel -->
+  <aside *ngIf="showExpedient && patient" 
+         class="w-1/2 lg:w-2/5 h-screen bg-slate-50 text-slate-800 flex flex-col shadow-2xl border-l border-slate-200 animate-slide-in overflow-y-auto">
+    
+    <!-- Side Panel Header -->
+    <div class="flex items-center justify-between px-6 py-4 bg-white border-b border-slate-200 sticky top-0 z-20">
+      <div class="flex items-center gap-2">
+        <span class="material-symbols-outlined text-primary">clinical_notes</span>
+        <h2 class="text-lg font-bold text-slate-800">Expediente Clínico</h2>
+      </div>
+      <div class="flex items-center gap-3">
+        <!-- Autosave indicator -->
+        <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-100 text-slate-500 text-[10px] font-semibold">
+          <span class="material-symbols-outlined text-xs text-emerald-600">check_circle</span>
+          <span [className]="autosaveClass">{{ autosaveText }}</span>
+        </div>
+        <!-- Close side panel -->
+        <button (click)="showExpedient = false" class="material-symbols-outlined text-slate-500 hover:bg-slate-100 p-2 rounded-full cursor-pointer transition-colors" title="Cerrar panel">
+          close
+        </button>
+      </div>
+    </div>
+
+    <!-- Side Panel Body -->
+    <div class="p-6 space-y-6 flex-grow">
+      
+      <!-- Patient profile banner -->
+      <div class="bg-white p-4 rounded-xl border border-slate-100 shadow-sm flex items-center gap-3">
+        <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center text-lg font-bold">
+          {{ patient.nombre[0] }}{{ patient.apellido[0] }}
+        </div>
+        <div>
+          <h3 class="text-sm font-bold text-slate-800">{{ patient.nombre }} {{ patient.apellido }}</h3>
+          <p class="text-xs text-slate-500">Edad: {{ getAge(patient.fechaNacimiento) }} | DNI: {{ patient.dni }}</p>
+        </div>
+      </div>
+
+      <!-- Mode Switcher -->
+      <div class="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-100 shadow-sm">
+        <div>
+          <h4 class="text-xs font-bold text-slate-400 uppercase tracking-wide">Modo de Vista</h4>
+          <p class="text-xs text-slate-500">Consulta: {{ consultationDate }}</p>
+        </div>
+        <div class="flex bg-slate-100 rounded-full p-0.5 relative w-28 h-8 cursor-pointer select-none" (click)="toggleMode()">
+          <div class="absolute h-7 w-[52px] bg-primary rounded-full transition-all duration-300 top-0.5"
+               [style.left.px]="isEditMode ? 56 : 2"></div>
+          <div class="flex-1 text-center z-10 text-[10px] font-bold flex items-center justify-center transition-colors duration-300"
+               [ngClass]="isEditMode ? 'text-slate-500' : 'text-white'">VER</div>
+          <div class="flex-1 text-center z-10 text-[10px] font-bold flex items-center justify-center transition-colors duration-300"
+               [ngClass]="isEditMode ? 'text-white' : 'text-slate-500'">EDIT</div>
+        </div>
+      </div>
+
+      <!-- Clinical Form -->
+      <form [formGroup]="expedientForm" (ngSubmit)="onSubmitExpedient()" class="space-y-5">
+        
+        <!-- Diagnóstico -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-bold text-slate-600 flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-sm text-primary">diagnosis</span>
+            Diagnóstico Principal *
+          </label>
+          <div *ngIf="!isEditMode" class="p-3.5 bg-white rounded-xl border border-slate-100 text-xs text-slate-700 min-h-[50px]">
+            {{ expedientForm.get('diagnostico')?.value || '(Vacío)' }}
+          </div>
+          <div *ngIf="isEditMode">
+            <textarea formControlName="diagnostico" 
+                      class="w-full bg-white border border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl text-xs p-3 outline-none placeholder-slate-400 min-h-[80px]" 
+                      placeholder="Ingrese el diagnóstico detallado..."></textarea>
+            <div *ngIf="expedientForm.get('diagnostico')?.touched && expedientForm.get('diagnostico')?.invalid" class="text-[10px] text-red-500 mt-0.5">
+              El diagnóstico es obligatorio.
+            </div>
+          </div>
+        </div>
+
+        <!-- Tratamiento -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-bold text-slate-600 flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-sm text-primary">prescriptions</span>
+            Tratamiento Sugerido *
+          </label>
+          <div *ngIf="!isEditMode" class="p-3.5 bg-white rounded-xl border border-slate-100 text-xs text-slate-700 min-h-[50px]">
+            {{ expedientForm.get('tratamiento')?.value || '(Vacío)' }}
+          </div>
+          <div *ngIf="isEditMode">
+            <textarea formControlName="tratamiento" 
+                      class="w-full bg-white border border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl text-xs p-3 outline-none placeholder-slate-400 min-h-[80px]" 
+                      placeholder="Describa el plan de tratamiento..."></textarea>
+            <div *ngIf="expedientForm.get('tratamiento')?.touched && expedientForm.get('tratamiento')?.invalid" class="text-[10px] text-red-500 mt-0.5">
+              El tratamiento es obligatorio.
+            </div>
+          </div>
+        </div>
+
+        <!-- Observaciones -->
+        <div class="flex flex-col gap-1.5">
+          <label class="text-xs font-bold text-slate-600 flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-sm text-primary">visibility</span>
+            Observaciones
+          </label>
+          <div *ngIf="!isEditMode" class="p-3.5 bg-white rounded-xl border border-slate-100 text-xs text-slate-700 min-h-[50px]">
+            {{ expedientForm.get('observaciones')?.value || '(Vacío)' }}
+          </div>
+          <div *ngIf="isEditMode">
+            <textarea formControlName="observaciones" 
+                      class="w-full bg-white border border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl text-xs p-3 outline-none placeholder-slate-400 min-h-[60px]" 
+                      placeholder="Observaciones adicionales..."></textarea>
+          </div>
+        </div>
+
+        <!-- Próxima Cita & Submit -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+          <div class="flex flex-col gap-1.5">
+            <label class="text-xs font-bold text-slate-600">Próxima Cita</label>
+            <div *ngIf="!isEditMode" class="p-3.5 bg-white rounded-xl border border-slate-100 text-xs text-slate-700">
+              {{ expedientForm.get('proximaCita')?.value }}
+            </div>
+            <div *ngIf="isEditMode">
+              <select formControlName="proximaCita" 
+                      class="w-full bg-white border border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary rounded-xl text-xs p-3 h-[42px] outline-none">
+                <option value="1 week">1 semana</option>
+                <option value="2 weeks">2 semanas</option>
+                <option value="1 month">1 mes</option>
+                <option value="No follow-up required">No requerida</option>
+              </select>
+            </div>
+          </div>
+
+          <div *ngIf="isEditMode" class="flex items-end">
+            <button type="submit" 
+                    [disabled]="expedientForm.invalid || submitting"
+                    class="w-full bg-emerald-600 text-white py-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 hover:bg-emerald-700 transition-all shadow-md active:scale-95 duration-200 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none cursor-pointer">
+              <span *ngIf="submitting" class="animate-spin border-2 border-white/30 border-t-white w-3 h-3 rounded-full"></span>
+              <span class="material-symbols-outlined text-sm">save</span>
+              Guardar y Finalizar
+            </button>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </aside>
+  
 </div>
