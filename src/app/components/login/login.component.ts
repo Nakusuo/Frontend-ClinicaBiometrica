@@ -83,7 +83,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       this.authService.loginFacial(this.email, Array.from(embedding), this.role).subscribe({
         next: (res) => {
           const userObj = this.role === 'doctor' ? (res.doctor || res.user || res) : (res.patient || res.user || res);
-          this.authService.setSession(userObj, this.role);
+          this.authService.setSession(userObj, this.role, res.access_token);
           if (this.role === 'doctor') {
             this.router.navigate(['/dashboard']);
           } else {
@@ -104,32 +104,52 @@ export class LoginComponent implements OnInit, OnDestroy {
   bypassLogin(): void {
     this.loading = true;
     this.error = '';
-    if (this.role === 'doctor') {
-      const mockDoctor = {
-        id: 1,
-        nombre: 'Carlos',
-        apellido: 'Mendoza',
-        especialidad: 'Medicina General',
-        email: this.email || 'carlos.mendoza@clinica.com',
-        telefono: '+51 999 111 222'
-      };
-      this.authService.setSession(mockDoctor, 'doctor');
-      this.router.navigate(['/dashboard']);
-    } else {
-      const mockPatient = {
-        id: 1,
-        nombre: 'María',
-        apellido: 'Delgado',
-        dni: '76543210',
-        fechaNacimiento: '1995-10-20',
-        telefono: '+51 987 654 321',
-        email: this.email || 'maria.delgado@email.com',
-        direccion: 'Av. Larco 456, Miraflores'
-      };
-      this.authService.setSession(mockPatient, 'paciente');
-      this.router.navigate(['/patient-dashboard']);
-    }
-    this.loading = false;
+    
+    const defaultEmail = this.role === 'doctor' ? 'doctor@email.com' : 'maria@email.com';
+    const emailToUse = this.email || defaultEmail;
+    const mockEmbedding = Array(128).fill(0.1);
+
+    this.authService.loginFacial(emailToUse, mockEmbedding, this.role).subscribe({
+      next: (res) => {
+        const userObj = this.role === 'doctor' ? (res.doctor || res.user || res) : (res.patient || res.user || res);
+        this.authService.setSession(userObj, this.role, res.access_token);
+        if (this.role === 'doctor') {
+          this.router.navigate(['/dashboard']);
+        } else {
+          this.router.navigate(['/patient-dashboard']);
+        }
+        this.loading = false;
+      },
+      error: (err) => {
+        console.warn('Real bypass login failed, falling back to client-side mock:', err);
+        if (this.role === 'doctor') {
+          const mockDoctor = {
+            id: 1,
+            nombre: 'Carlos',
+            apellido: 'Mendoza',
+            especialidad: 'Medicina General',
+            email: emailToUse,
+            telefono: '+51 999 111 222'
+          };
+          this.authService.setSession(mockDoctor, 'doctor');
+          this.router.navigate(['/dashboard']);
+        } else {
+          const mockPatient = {
+            id: 1,
+            nombre: 'María',
+            apellido: 'Delgado',
+            dni: '76543210',
+            fechaNacimiento: '1995-10-20',
+            telefono: '+51 987 654 321',
+            email: emailToUse,
+            direccion: 'Av. Larco 456, Miraflores'
+          };
+          this.authService.setSession(mockPatient, 'paciente');
+          this.router.navigate(['/patient-dashboard']);
+        }
+        this.loading = false;
+      }
+    });
   }
 
   ngOnDestroy(): void {
