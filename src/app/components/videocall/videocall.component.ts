@@ -1,5 +1,6 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { WebRTCService } from '../../services/webrtc.service';
 import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
@@ -23,9 +24,20 @@ export class VideocallComponent implements OnInit, OnDestroy {
   audioMuted = false;
   videoMuted = false;
 
+  // Split screen / Expediente editor integration
+  showExpedient = false;
+  expedientForm!: FormGroup;
+  isEditMode = true;
+  autosaveText = 'Guardado ✓';
+  autosaveClass = 'text-secondary';
+  consultationDate = '';
+  submitting = false;
+  successMessage = '';
+
   constructor(
     private route: ActivatedRoute, 
     private router: Router, 
+    private fb: FormBuilder,
     private webrtcService: WebRTCService,
     private apiService: ApiService,
     private authService: AuthService
@@ -35,6 +47,18 @@ export class VideocallComponent implements OnInit, OnDestroy {
     this.appointmentId = Number(this.route.snapshot.paramMap.get('id'));
     this.role = this.authService.getUserRole();
     
+    // Initialize form
+    this.expedientForm = this.fb.group({
+      diagnostico: ['', Validators.required],
+      tratamiento: ['', Validators.required],
+      observaciones: [''],
+      proximaCita: ['1 week']
+    });
+
+    const now = new Date();
+    const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    this.consultationDate = `${now.getDate()} de ${months[now.getMonth()]}, ${now.getFullYear()}`;
+
     this.loadPatientFromAppointment();
 
     this.webrtcService.streamEvent.subscribe(stream => {
@@ -45,6 +69,8 @@ export class VideocallComponent implements OnInit, OnDestroy {
       this.endCall();
     });
     this.webrtcService.errorEvent.subscribe(err => { this.callError = err.message; });
+
+    this.setupAutosaveListener();
   }
 
   loadPatientFromAppointment(): void {
@@ -122,13 +148,87 @@ export class VideocallComponent implements OnInit, OnDestroy {
     }
   }
 
-  goToEditor(): void {
-    if (this.patient) {
-      this.webrtcService.endCall();
-      this.router.navigate(['/expedient-editor', this.patient.id, this.appointmentId]);
-    } else {
-      this.endCall();
+  toggleMode(): void {
+    this.isEditMode = !this.isEditMode;
+  }
+
+  getAge(birthDateString?: string): string {
+    if (!birthDateString) return 'No especificada';
+    try {
+      const today = new Date();
+      const birthDate = new Date(birthDateString);
+      if (isNaN(birthDate.getTime())) return 'No especificada';
+      let age = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        age--;
+      }
+      return age + ' años';
+    } catch {
+      return 'No especificada';
     }
+  }
+
+  setupAutosaveListener(): void {
+    let timeout: any = null;
+    this.expedientForm.valueChanges.subscribe(() => {
+      this.autosaveText = 'Guardando...';
+      this.autosaveClass = 'text-slate-400';
+      
+      if (timeout) clearTimeout(timeout);
+      timeout = setTimeout(() => {
+        const now = new Date();
+        const timestamp = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+        this.autosaveText = `Guardado ✓ ${timestamp}`;
+        this.autosaveClass = 'text-secondary font-semibold';
+      }, 1000);
+    });
+  }
+
+  onSubmitExpedient(): void {
+    if (this.expedientForm.invalid || !this.patient) return;
+    this.submitting = true;
+    this.callError = '';
+    this.successMessage = '';
+
+    const doctor = this.authService.getCurrentUser();
+    const doctorId = doctor ? doctor.id : 1;
+
+    const newExpedient = {
+      id: 0,
+      patientId: this.patient.id,
+      diagnostico: this.expedientForm.value.diagnostico,
+      tratamiento: this.expedientForm.value.tratamiento,
+      fecha: new Date().toISOString().split('T')[0],
+      doctorId: doctorId,
+      observaciones: `${this.expedientForm.value.observaciones || ''} | Próxima cita sugerida: ${this.expedientForm.value.proximaCita}`
+    };
+
+    this.apiService.createExpediente(newExpedient).subscribe({
+      next: () => {
+        this.apiService.updateCitaEstado(this.appointmentId, 'finalizada').subscribe({
+          next: () => {
+            this.successMessage = 'Expediente clínico guardado y consulta finalizada.';
+            this.submitting = false;
+            setTimeout(() => {
+              this.endCall();
+            }, 2000);
+          },
+          error: () => {
+            this.callError = 'El expediente se creó, pero no se pudo finalizar la cita.';
+            this.submitting = false;
+          }
+        });
+      },
+      error: () => {
+        this.callError = 'Error al guardar el expediente clínico.';
+        this.submitting = false;
+      }
+    });
+  }
+
+  goToEditor(): void {
+    this.showExpedient = true;
   }
 
   endCall(): void { 

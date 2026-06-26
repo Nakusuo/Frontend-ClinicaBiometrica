@@ -26,6 +26,30 @@ export class BiometricService {
     return detections ? detections.descriptor : null;
   }
 
+  async detectFullFace(video: HTMLVideoElement): Promise<any | null> {
+    return await faceapi
+      .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+      .withFaceLandmarks()
+      .withFaceDescriptor();
+  }
+
+  private getDistance(p1: faceapi.Point, p2: faceapi.Point): number {
+    return Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+  }
+
+  calculateEAR(landmarks: faceapi.FaceLandmarks68): number {
+    const pts = landmarks.positions;
+    
+    // Left eye points: 36 to 41
+    const leftEAR = (this.getDistance(pts[37], pts[41]) + this.getDistance(pts[38], pts[40])) / (2 * this.getDistance(pts[36], pts[39]));
+    
+    // Right eye points: 42 to 47
+    const rightEAR = (this.getDistance(pts[43], pts[47]) + this.getDistance(pts[44], pts[46])) / (2 * this.getDistance(pts[42], pts[45]));
+    
+    // Return average EAR of both eyes
+    return (leftEAR + rightEAR) / 2;
+  }
+
   async startCamera(videoElement: HTMLVideoElement): Promise<MediaStream | null> {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({

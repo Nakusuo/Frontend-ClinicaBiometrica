@@ -21,6 +21,12 @@ export class LoginComponent implements OnInit, OnDestroy {
   showBiometrics = false;
   private stream: MediaStream | null = null;
 
+  // Liveness Detection variables
+  livenessVerified = false;
+  livenessStatus = 'Iniciando verificación...';
+  private eyeClosed = false;
+  private lastDescriptor: Float32Array | null = null;
+
   constructor(
     private authService: AuthService,
     private biometricService: BiometricService,
@@ -50,6 +56,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   cancelBiometrics(): void {
     this.showBiometrics = false;
     this.cameraActive = false;
+    this.livenessVerified = false;
     if (this.stream) {
       this.biometricService.stopCamera(this.stream);
       this.stream = null;
@@ -63,6 +70,9 @@ export class LoginComponent implements OnInit, OnDestroy {
       await this.biometricService.loadModels();
       this.stream = await this.biometricService.startCamera(this.videoRef.nativeElement);
       this.cameraActive = !!this.stream;
+      if (this.cameraActive) {
+        this.startLivenessDetection();
+      }
     } catch {
       this.error = 'No se pudo acceder a la cámara';
       this.showBiometrics = false;
@@ -70,18 +80,60 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.loading = false;
   }
 
+  startLivenessDetection(): void {
+    this.livenessVerified = false;
+    this.livenessStatus = 'Por favor, mire a la cámara y parpadee una vez.';
+    this.eyeClosed = false;
+    
+    const detectLoop = async () => {
+      if (!this.cameraActive || this.livenessVerified) return;
+      
+      try {
+        const detection = await this.biometricService.detectFullFace(this.videoRef.nativeElement);
+        if (detection) {
+          const ear = this.biometricService.calculateEAR(detection.landmarks);
+          this.lastDescriptor = detection.descriptor;
+          
+          if (ear < 0.22) {
+            this.eyeClosed = true;
+            this.livenessStatus = '¡Ojo cerrado detectado! Abra los ojos...';
+          } else if (this.eyeClosed && ear > 0.26) {
+            this.livenessVerified = true;
+            this.livenessStatus = '¡Vitalidad confirmada! Autenticando...';
+            this.captureAndLogin();
+            return;
+          } else {
+            this.livenessStatus = 'Rostro detectado. Por favor, parpadee para validar vitalidad.';
+          }
+        } else {
+          this.livenessStatus = 'Buscando rostro...';
+        }
+      } catch (e) {
+        console.error('Error in liveness loop:', e);
+      }
+      
+      if (this.cameraActive && !this.livenessVerified) {
+        setTimeout(() => detectLoop(), 100);
+      }
+    };
+    
+    setTimeout(() => detectLoop(), 800);
+  }
+
   async captureAndLogin(): Promise<void> {
     this.loading = true;
     this.error = '';
     try {
-      const embedding = await this.biometricService.detectFace(this.videoRef.nativeElement);
+      const embedding = this.lastDescriptor || await this.biometricService.detectFace(this.videoRef.nativeElement);
       if (!embedding) {
         this.error = 'No se detectó ningún rostro';
         this.loading = false;
         return;
       }
+      this.livenessVerified = true;
       this.authService.loginFacial(this.email, Array.from(embedding), this.role).subscribe({
         next: (res) => {
+          this.cancelBiometrics();
           const userObj = this.role === 'doctor' ? (res.doctor || res.user || res) : (res.patient || res.user || res);
           this.authService.setSession(userObj, this.role, res.access_token);
           if (this.role === 'doctor') {
@@ -93,11 +145,15 @@ export class LoginComponent implements OnInit, OnDestroy {
         error: () => {
           this.error = 'Rostro no reconocido';
           this.loading = false;
+          this.livenessVerified = false;
+          this.startLivenessDetection();
         },
       });
     } catch {
       this.error = 'Error al procesar la imagen';
       this.loading = false;
+      this.livenessVerified = false;
+      this.startLivenessDetection();
     }
   }
 
@@ -153,8 +209,6 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    if (this.stream) {
-      this.biometricService.stopCamera(this.stream);
-    }
+    this.cancelBiometrics();
   }
 }
