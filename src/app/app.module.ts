@@ -32,6 +32,7 @@ import { DoctorRegisterComponent } from './components/doctor-register/doctor-reg
 import { PatientRegisterComponent } from './components/patient-register/patient-register.component';
 import { PatientDashboardComponent } from './components/patient-dashboard/patient-dashboard.component';
 import { ExpedientEditorComponent } from './components/expedient-editor/expedient-editor.component';
+import { SetupBiometricsComponent } from './components/setup-biometrics/setup-biometrics.component';
 
 @NgModule({
   declarations: [
@@ -46,6 +47,7 @@ import { ExpedientEditorComponent } from './components/expedient-editor/expedien
     PatientRegisterComponent,
     PatientDashboardComponent,
     ExpedientEditorComponent,
+    SetupBiometricsComponent,
   ],
   imports: [
     BrowserModule,

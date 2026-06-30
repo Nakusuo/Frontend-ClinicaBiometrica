@@ -5,56 +5,99 @@
         <span class="material-symbols-outlined text-3xl">health_and_safety</span>
         <h1 class="text-xl font-bold text-primary">Telemedicina Integrada</h1>
       </div>
-      <p class="text-xs text-on-surface-variant font-semibold">
-        {{ role === 'doctor' ? 'Portal de Especialistas - Acceso Biométrico' : 'Portal de Pacientes - Acceso Biométrico' }}
+      <p class="text-xs text-slate-500 font-semibold">
+        Acceso Clínico Unificado
       </p>
     </div>
 
-    <!-- Step 1: Input Email -->
-    <div *ngIf="!showBiometrics" class="space-y-6">
+    <!-- Step 1: Email Input (Standard) -->
+    <div *ngIf="!showBiometrics && !showPasswordInput" class="space-y-6">
       <div class="space-y-2">
-        <label class="text-xs font-semibold text-slate-500">Identificación del {{ role === 'doctor' ? 'Médico' : 'Paciente' }} (Email)</label>
+        <label class="text-xs font-semibold text-slate-500">Correo Electrónico</label>
         <div class="flex items-center px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
           <span class="material-symbols-outlined text-slate-400 mr-2 text-xl">mail</span>
           <input #emailInput 
                  (input)="email = emailInput.value" 
                  [value]="email"
-                 (keyup.enter)="initiateBiometrics()"
+                 (keyup.enter)="checkAccess()"
                  type="email" 
                  class="w-full border-none focus:ring-0 bg-transparent p-0 text-slate-700 text-sm placeholder-slate-400 outline-none" 
-                 placeholder="doctor@hospital.com" />
+                 placeholder="ejemplo@clinica.com" />
         </div>
       </div>
 
-      <mat-error *ngIf="error" class="text-xs font-medium text-red-600 block mt-2">{{ error }}</mat-error>
+      <mat-error *ngIf="error" class="text-xs font-medium text-red-600 block mt-2 text-center">{{ error }}</mat-error>
 
       <div class="space-y-3 pt-2">
-        <button (click)="initiateBiometrics()" 
-                [disabled]="!email || !email.includes('@')"
+        <button (click)="checkAccess()" 
+                [disabled]="!email || !email.includes('@') || loading"
                 class="w-full py-3.5 bg-primary hover:bg-primary/5 hover:text-primary border border-primary text-white font-bold rounded-xl text-sm transition-all shadow-sm active:scale-95 duration-200 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none flex items-center justify-center gap-2">
           <span class="material-symbols-outlined text-base">fingerprint</span>
-          Iniciar biometría
+          {{ loading ? 'Verificando...' : 'Iniciar Acceso' }}
         </button>
-        <button (click)="bypassLogin()" 
-                class="w-full py-3 border border-slate-200 text-slate-500 hover:bg-slate-100 rounded-xl text-xs font-semibold transition-all">
-          Bypass (Sin Cámara)
+        
+        <button (click)="activatePasswordMode()" 
+                [disabled]="!email || !email.includes('@')"
+                class="w-full py-2.5 border border-slate-200 text-slate-500 hover:bg-slate-100 rounded-xl text-xs font-semibold transition-all disabled:opacity-50">
+          Ingresar con contraseña
         </button>
       </div>
 
       <p class="text-center text-xs text-slate-400 mt-4">
-        ¿No estás registrado? 
-        <a class="text-primary font-bold hover:underline" [routerLink]="role === 'doctor' ? '/doctor-register' : '/patient-register'">Regístrate aquí</a>
+        ¿Eres un paciente nuevo? 
+        <a class="text-primary font-bold hover:underline" routerLink="/patient-register">Regístrate aquí</a>
       </p>
-      
-      <div class="text-center pt-2">
-        <a routerLink="/role-selector" class="text-xs text-slate-400 hover:text-primary transition-colors flex items-center justify-center gap-1">
-          <span class="material-symbols-outlined text-xs">arrow_back</span>
-          Volver a inicio
-        </a>
+    </div>
+
+    <!-- Step 2: Password Input (when biometrics are missing or password login is chosen) -->
+    <div *ngIf="showPasswordInput" class="space-y-6">
+      <div class="bg-amber-50 border border-amber-200 text-amber-800 text-xs px-4 py-3 rounded-xl flex items-start gap-2">
+        <span class="material-symbols-outlined text-amber-600 text-base mt-0.5">info</span>
+        <div>
+          <strong>Acceso por contraseña requerido.</strong> Si es tu primer ingreso o no has registrado tu rostro, inicia sesión para configurar tu biometría.
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <div class="space-y-2">
+          <label class="text-xs font-semibold text-slate-500">Correo Electrónico</label>
+          <div class="flex items-center px-4 py-2.5 border border-slate-200 rounded-xl bg-slate-100">
+            <span class="material-symbols-outlined text-slate-400 mr-2 text-xl">mail</span>
+            <span class="text-slate-600 text-sm">{{ email }}</span>
+          </div>
+        </div>
+
+        <div class="space-y-2">
+          <label class="text-xs font-semibold text-slate-500">Contraseña</label>
+          <div class="flex items-center px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary transition-all">
+            <span class="material-symbols-outlined text-slate-400 mr-2 text-xl">lock</span>
+            <input #passwordInput 
+                   (input)="password = passwordInput.value"
+                   (keyup.enter)="loginWithPassword()"
+                   type="password" 
+                   class="w-full border-none focus:ring-0 bg-transparent p-0 text-slate-700 text-sm placeholder-slate-400 outline-none" 
+                   placeholder="••••••••" />
+          </div>
+        </div>
+      </div>
+
+      <mat-error *ngIf="error" class="text-xs font-medium text-red-600 block mt-2 text-center">{{ error }}</mat-error>
+
+      <div class="space-y-3 pt-2">
+        <button (click)="loginWithPassword()" 
+                [disabled]="!password || loading"
+                class="w-full py-3.5 bg-primary text-white font-bold rounded-xl text-sm transition-all shadow-sm active:scale-95 duration-200 disabled:bg-slate-200 disabled:text-slate-400 flex items-center justify-center gap-2">
+          <span *ngIf="loading" class="animate-spin border-2 border-white/30 border-t-white w-4 h-4 rounded-full"></span>
+          Ingresar
+        </button>
+        <button (click)="cancelPasswordMode()" 
+                class="w-full py-2.5 border border-slate-200 text-slate-500 hover:bg-slate-100 rounded-xl text-xs font-semibold transition-all">
+          Atrás
+        </button>
       </div>
     </div>
 
-    <!-- Step 2: Camera Capture -->
+    <!-- Step 3: Biometric Camera Capture -->
     <div *ngIf="showBiometrics" class="space-y-6">
       <div class="flex flex-col items-center justify-center">
         <!-- Biometric Circle -->

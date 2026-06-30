@@ -1,0 +1,115 @@
+<div class="surface min-h-screen font-roboto bg-slate-50">
+  <!-- Header -->
+  <header class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="flex justify-between items-center w-full px-4 md:px-12 max-w-7xl mx-auto h-16">
+      <div class="flex items-center gap-3">
+        <span class="material-symbols-outlined text-primary text-3xl">health_and_safety</span>
+        <span class="text-xl font-bold text-primary">Telemedicina Integrada</span>
+      </div>
+      <div class="text-xs font-semibold text-slate-500">
+        Configuración de Seguridad
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-7xl mx-auto px-4 md:px-12 py-6 min-h-[calc(100vh-64px)] flex items-center justify-center">
+    <div class="w-full max-w-xl bg-white rounded-2xl shadow-lg border border-slate-100 p-8 space-y-6">
+      <div class="text-center">
+        <h1 class="text-2xl font-bold text-slate-800">Activa tu Acceso Biométrico</h1>
+        <p class="text-xs text-slate-500 max-w-sm mx-auto mt-2">
+          Hola, Dr(a). {{ currentUser?.nombre || 'Especialista' }}. Como parte de la seguridad de la clínica, requerimos registrar su biometría facial para sus próximos accesos.
+        </p>
+      </div>
+
+      <div class="flex flex-col items-center justify-center gap-4">
+        <!-- Biometric Circle -->
+        <div class="relative w-64 h-64 rounded-full overflow-hidden border-4 border-slate-200 bg-slate-900 shadow-inner">
+          <video #video autoplay muted playsinline class="absolute inset-0 w-full h-full object-cover"></video>
+          <div class="absolute inset-0 z-20 face-scanning-animation pointer-events-none" *ngIf="isCapturing && captures < 3"></div>
+          <div class="absolute inset-0 flex items-center justify-center z-30 pointer-events-none">
+            <div class="w-48 h-56 rounded-[100px] border border-white/30 border-dashed"></div>
+          </div>
+        </div>
+
+        <!-- Status -->
+        <div class="w-full max-w-sm space-y-4 text-center">
+          <div class="flex items-center justify-center gap-2">
+            <span class="material-symbols-outlined text-primary animate-pulse" *ngIf="isCapturing && captures < 3">
+              search
+            </span>
+            <span class="material-symbols-outlined text-emerald-600" *ngIf="captures >= 3">
+              check_circle
+            </span>
+            <span class="text-sm font-semibold text-slate-700">
+              {{ captures >= 3 ? '¡Rostro capturado correctamente!' : (isCapturing ? 'Buscando rostro...' : 'Cargando cámara...') }}
+            </span>
+          </div>
+
+          <!-- Error message inline -->
+          <div *ngIf="error" class="bg-red-50 text-red-800 border border-red-200 px-4 py-3 rounded-xl text-xs flex items-center justify-center gap-2 font-medium">
+            <span class="material-symbols-outlined text-red-600 text-sm">error</span>
+            <span>{{ error }}</span>
+          </div>
+
+          <!-- Actions -->
+          <div class="space-y-2">
+            <button *ngIf="captures < 3" 
+                    (click)="captureSample()" 
+                    [disabled]="loading || !isCapturing"
+                    class="w-full bg-primary hover:bg-primary/5 hover:text-primary border border-primary text-white font-bold py-3 rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 disabled:bg-slate-200 disabled:text-slate-400 disabled:shadow-none">
+              <span class="material-symbols-outlined text-base">photo_camera</span>
+              {{ loading ? 'Procesando...' : 'Capturar Rostro (' + captures + '/3)' }}
+            </button>
+
+            <button *ngIf="captures < 3" 
+                    (click)="bypassCaptures()" 
+                    class="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-xl text-xs transition-all shadow-sm">
+              Bypass (Simular Captura Sin Cámara)
+            </button>
+          </div>
+
+          <!-- Progress -->
+          <div class="space-y-1 pt-2">
+            <div class="flex justify-between items-center px-1">
+              <span class="text-xs text-slate-500">Muestras faciales: {{ captures }}/3</span>
+              <span class="text-xs text-primary font-bold">{{ progressPercent }}%</span>
+            </div>
+            <div class="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div class="h-full bg-primary rounded-full transition-all duration-500" [style.width.%]="progressPercent"></div>
+            </div>
+          </div>
+
+          <!-- Submit button -->
+          <div class="pt-4">
+            <button class="w-full py-3.5 rounded-xl font-bold transition-all"
+                    [class.bg-emerald-600]="captures >= 3"
+                    [class.text-white]="captures >= 3"
+                    [class.bg-slate-200]="captures < 3"
+                    [class.text-slate-400]="captures < 3"
+                    [disabled]="captures < 3 || loading"
+                    (click)="registerBiometrics()">
+              {{ loading ? 'Guardando...' : 'Activar Cuenta' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Success Modal -->
+  <div *ngIf="showSuccessModal" class="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-8 text-center space-y-6">
+      <div class="w-20 h-20 bg-emerald-100 text-emerald-800 rounded-full flex items-center justify-center mx-auto">
+        <span class="material-symbols-outlined text-4xl" style="font-variation-settings: 'FILL' 1;">verified</span>
+      </div>
+      <div class="space-y-2">
+        <h3 class="text-2xl font-bold text-slate-800">¡Acceso Activado!</h3>
+        <p class="text-sm text-slate-500">Tu biometría facial ha sido registrada correctamente. A partir de ahora podrás ingresar usando tu rostro.</p>
+      </div>
+      <button class="w-full bg-primary text-white py-4 rounded-xl text-sm font-bold hover:bg-primary-container transition-all"
+              (click)="goToDashboard()">
+        Entrar al Dashboard
+      </button>
+    </div>
+  </div>
+</div>

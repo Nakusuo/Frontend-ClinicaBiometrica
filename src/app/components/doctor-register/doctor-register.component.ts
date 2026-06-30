@@ -40,11 +40,19 @@ export class DoctorRegisterComponent implements OnDestroy {
       cedula: ['', Validators.required],
       telefono: ['', Validators.required],
       password: ['', [Validators.required, Validators.minLength(8)]],
+      adminCode: ['', Validators.required],
     });
   }
 
   async goToStep2(): Promise<void> {
     if (this.registerForm.invalid) return;
+
+    const enteredCode = this.registerForm.get('adminCode')?.value;
+    if (enteredCode !== 'ADMIN_CLINICA_2026') {
+      this.error = 'El código de autorización del administrador es incorrecto.';
+      return;
+    }
+
     this.currentStep = 2;
     this.isCapturing = false;
     this.captures = 0;
