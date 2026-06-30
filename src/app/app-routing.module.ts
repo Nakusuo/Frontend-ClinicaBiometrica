@@ -10,14 +10,16 @@ import { DoctorRegisterComponent } from './components/doctor-register/doctor-reg
 import { PatientRegisterComponent } from './components/patient-register/patient-register.component';
 import { PatientDashboardComponent } from './components/patient-dashboard/patient-dashboard.component';
 import { ExpedientEditorComponent } from './components/expedient-editor/expedient-editor.component';
+import { SetupBiometricsComponent } from './components/setup-biometrics/setup-biometrics.component';
 import { AuthGuard } from './guards/auth.guard';
 
 const routes: Routes = [
-  { path: '', redirectTo: '/role-selector', pathMatch: 'full' },
+  { path: '', redirectTo: '/login', pathMatch: 'full' },
   { path: 'role-selector', component: RoleSelectorComponent },
   { path: 'doctor-register', component: DoctorRegisterComponent },
   { path: 'patient-register', component: PatientRegisterComponent },
   { path: 'login', component: LoginComponent },
+  { path: 'setup-biometrics', component: SetupBiometricsComponent, canActivate: [AuthGuard] },
   { path: 'dashboard', component: DashboardComponent, canActivate: [AuthGuard] },
   { path: 'patient-dashboard', component: PatientDashboardComponent, canActivate: [AuthGuard] },
   { path: 'patient-form/:id', component: PatientFormComponent, canActivate: [AuthGuard] },

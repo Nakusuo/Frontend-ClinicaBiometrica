@@ -20,6 +20,14 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/auth/facial-login`, { correo, embedding_facial, role });
   }
 
+  loginTraditional(correo: string, password: string): Observable<any> {
+    return this.http.post(`${this.apiUrl}/auth/login`, { correo, password });
+  }
+
+  saveDoctorBiometrics(doctorId: number, embedding: number[]): Observable<any> {
+    return this.http.post(`${this.apiUrl}/doctores/${doctorId}/biometria`, { embedding });
+  }
+
   registerDoctor(doctor: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/auth/register-doctor`, doctor);
   }

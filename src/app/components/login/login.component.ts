@@ -14,11 +14,11 @@ export class LoginComponent implements OnInit, OnDestroy {
   loading = false;
   error = '';
   cameraActive = false;
-  role: 'doctor' | 'paciente' = 'doctor';
   
-  // Visual Guide fields
   email = '';
+  password = '';
   showBiometrics = false;
+  showPasswordInput = false;
   private stream: MediaStream | null = null;
 
   // Liveness Detection variables
@@ -35,21 +35,50 @@ export class LoginComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    // Si viene algún correo por query params (opcional)
     this.route.queryParams.subscribe((params) => {
-      if (params['role'] === 'paciente') {
-        this.role = 'paciente';
-      } else {
-        this.role = 'doctor';
+      if (params['email']) {
+        this.email = params['email'];
+      }
+    });
+  }
+
+  checkAccess(): void {
+    if (!this.email || !this.email.includes('@')) {
+      this.error = 'Por favor ingrese un correo electrónico válido.';
+      return;
+    }
+    this.loading = true;
+    this.error = '';
+
+    // Llamamos con un dummy embedding para validar si el usuario tiene biometría configurada
+    const dummyEmbedding = Array(128).fill(0);
+    this.authService.loginFacial(this.email, dummyEmbedding).subscribe({
+      next: () => {
+        // Raro caso que coincida, iniciamos cámara
+        this.initiateBiometrics();
+      },
+      error: (err) => {
+        this.loading = false;
+        const errorDetail = err.error?.detail || '';
+        
+        if (err.status === 400 && errorDetail.includes('no cuenta con registro biométrico')) {
+          // No tiene biometría configurada, requiere ingresar por contraseña
+          this.showPasswordInput = true;
+          this.showBiometrics = false;
+        } else if (err.status === 401 && errorDetail.includes('biométrica fallida')) {
+          // Sí tiene biometría, iniciamos el flujo de la cámara
+          this.initiateBiometrics();
+        } else {
+          this.error = errorDetail || 'Usuario no registrado en el sistema.';
+        }
       }
     });
   }
 
   async initiateBiometrics(): Promise<void> {
-    if (!this.email || !this.email.includes('@')) {
-      this.error = 'Por favor ingrese un correo electrónico válido.';
-      return;
-    }
     this.showBiometrics = true;
+    this.showPasswordInput = false;
     await this.startCamera();
   }
 
@@ -61,6 +90,49 @@ export class LoginComponent implements OnInit, OnDestroy {
       this.biometricService.stopCamera(this.stream);
       this.stream = null;
     }
+  }
+
+  activatePasswordMode(): void {
+    this.showPasswordInput = true;
+    this.showBiometrics = false;
+    this.error = '';
+  }
+
+  cancelPasswordMode(): void {
+    this.showPasswordInput = false;
+    this.password = '';
+    this.error = '';
+  }
+
+  loginWithPassword(): void {
+    if (!this.password) return;
+    this.loading = true;
+    this.error = '';
+
+    this.authService.loginTraditional(this.email, this.password).subscribe({
+      next: (res) => {
+        this.loading = false;
+        const userObj = res.doctor || res.patient || res.user || res;
+        const role = res.doctor ? 'doctor' : 'paciente';
+        const hasBiometrics = userObj.has_biometrics;
+
+        this.authService.setSession(userObj, role, res.access_token);
+
+        if (!hasBiometrics) {
+          this.router.navigate(['/setup-biometrics']);
+        } else {
+          if (role === 'doctor') {
+            this.router.navigate(['/dashboard']);
+          } else {
+            this.router.navigate(['/patient-dashboard']);
+          }
+        }
+      },
+      error: (err) => {
+        this.loading = false;
+        this.error = err.error?.detail || 'Contraseña incorrecta o credenciales inválidas.';
+      }
+    });
   }
 
   async startCamera(): Promise<void> {
@@ -131,12 +203,15 @@ export class LoginComponent implements OnInit, OnDestroy {
         return;
       }
       this.livenessVerified = true;
-      this.authService.loginFacial(this.email, Array.from(embedding), this.role).subscribe({
+      this.authService.loginFacial(this.email, Array.from(embedding)).subscribe({
         next: (res) => {
           this.cancelBiometrics();
-          const userObj = this.role === 'doctor' ? (res.doctor || res.user || res) : (res.patient || res.user || res);
-          this.authService.setSession(userObj, this.role, res.access_token);
-          if (this.role === 'doctor') {
+          const isDoctor = !!res.doctor;
+          const userObj = isDoctor ? res.doctor : res.patient;
+          const role = isDoctor ? 'doctor' : 'paciente';
+          this.authService.setSession(userObj, role, res.access_token);
+          
+          if (role === 'doctor') {
             this.router.navigate(['/dashboard']);
           } else {
             this.router.navigate(['/patient-dashboard']);
@@ -161,15 +236,15 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = '';
     
-    const defaultEmail = this.role === 'doctor' ? 'doctor@email.com' : 'maria@email.com';
-    const emailToUse = this.email || defaultEmail;
     const mockEmbedding = Array(128).fill(0.1);
 
-    this.authService.loginFacial(emailToUse, mockEmbedding, this.role).subscribe({
+    this.authService.loginFacial(this.email, mockEmbedding).subscribe({
       next: (res) => {
-        const userObj = this.role === 'doctor' ? (res.doctor || res.user || res) : (res.patient || res.user || res);
-        this.authService.setSession(userObj, this.role, res.access_token);
-        if (this.role === 'doctor') {
+        const isDoctor = !!res.doctor;
+        const userObj = isDoctor ? res.doctor : res.patient;
+        const role = isDoctor ? 'doctor' : 'paciente';
+        this.authService.setSession(userObj, role, res.access_token);
+        if (role === 'doctor') {
           this.router.navigate(['/dashboard']);
         } else {
           this.router.navigate(['/patient-dashboard']);
@@ -177,14 +252,16 @@ export class LoginComponent implements OnInit, OnDestroy {
         this.loading = false;
       },
       error: (err) => {
-        console.warn('Real bypass login failed, falling back to client-side mock:', err);
-        if (this.role === 'doctor') {
+        console.warn('Real bypass login failed, falling back to mock:', err);
+        // Default to doctor if the email has "doctor" in it, otherwise patient
+        const isDoctor = this.email.toLowerCase().includes('doctor');
+        if (isDoctor) {
           const mockDoctor = {
             id: 1,
             nombre: 'Carlos',
             apellido: 'Mendoza',
             especialidad: 'Medicina General',
-            email: emailToUse,
+            email: this.email || 'doctor@email.com',
             telefono: '+51 999 111 222'
           };
           this.authService.setSession(mockDoctor, 'doctor');
@@ -197,7 +274,7 @@ export class LoginComponent implements OnInit, OnDestroy {
             dni: '76543210',
             fechaNacimiento: '1995-10-20',
             telefono: '+51 987 654 321',
-            email: emailToUse,
+            email: this.email || 'maria@email.com',
             direccion: 'Av. Larco 456, Miraflores'
           };
           this.authService.setSession(mockPatient, 'paciente');

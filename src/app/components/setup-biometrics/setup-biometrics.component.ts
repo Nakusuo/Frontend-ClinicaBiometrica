@@ -1,65 +1,46 @@
-import { Component, ElementRef, ViewChild, OnDestroy } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Component, ElementRef, ViewChild, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { BiometricService } from '../../services/biometric.service';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
-  selector: 'app-doctor-register',
-  templateUrl: './doctor-register.component.html',
-  styleUrls: ['./doctor-register.component.css'],
+  selector: 'app-setup-biometrics',
+  templateUrl: './setup-biometrics.component.html',
+  styleUrls: ['./setup-biometrics.component.css']
 })
-export class DoctorRegisterComponent implements OnDestroy {
+export class SetupBiometricsComponent implements OnInit, OnDestroy {
   @ViewChild('video') videoRef!: ElementRef<HTMLVideoElement>;
 
-  currentStep = 1;
   captures = 0;
   isCapturing = false;
   showSuccessModal = false;
   loading = false;
-  registerForm: FormGroup;
   error = '';
   private stream: MediaStream | null = null;
   private capturedEmbeddings: number[][] = [];
-
-  specialties = [
-    'Cardiología', 'Pediatría', 'Neurología',
-    'Medicina General', 'Dermatología',
-  ];
+  currentUser: any = null;
 
   constructor(
-    private fb: FormBuilder,
     private router: Router,
     private biometricService: BiometricService,
     private authService: AuthService
-  ) {
-    this.registerForm = this.fb.group({
-      nombre: ['', Validators.required],
-      email: ['', [Validators.required, Validators.email]],
-      especialidad: ['', Validators.required],
-      cedula: ['', Validators.required],
-      telefono: ['', Validators.required],
-      password: ['', [Validators.required, Validators.minLength(8)]],
-      adminCode: ['', Validators.required],
-    });
-  }
+  ) {}
 
-  async goToStep2(): Promise<void> {
-    if (this.registerForm.invalid) return;
-
-    const enteredCode = this.registerForm.get('adminCode')?.value;
-    if (enteredCode !== 'ADMIN_CLINICA_2026') {
-      this.error = 'El código de autorización del administrador es incorrecto.';
+  ngOnInit(): void {
+    this.currentUser = this.authService.getCurrentUser();
+    if (!this.currentUser) {
+      this.router.navigate(['/login']);
       return;
     }
+    this.startCamera();
+  }
 
-    this.currentStep = 2;
+  async startCamera(): Promise<void> {
     this.isCapturing = false;
     this.captures = 0;
     this.capturedEmbeddings = [];
     this.error = '';
 
-    // Let the template render the video element first, then start camera
     setTimeout(async () => {
       try {
         this.loading = true;
@@ -73,18 +54,6 @@ export class DoctorRegisterComponent implements OnDestroy {
         this.error = 'No se pudo acceder a la cámara o cargar los modelos.';
       }
     }, 100);
-  }
-
-  goToStep1(): void {
-    this.currentStep = 1;
-    this.isCapturing = false;
-    this.captures = 0;
-    this.capturedEmbeddings = [];
-    this.error = '';
-    if (this.stream) {
-      this.biometricService.stopCamera(this.stream);
-      this.stream = null;
-    }
   }
 
   async captureSample(): Promise<void> {
@@ -111,12 +80,12 @@ export class DoctorRegisterComponent implements OnDestroy {
     return Math.round((this.captures / 3) * 100);
   }
 
-  register(): void {
-    if (this.registerForm.invalid || this.capturedEmbeddings.length < 3) return;
+  registerBiometrics(): void {
+    if (this.capturedEmbeddings.length < 3 || !this.currentUser) return;
     this.loading = true;
     this.error = '';
 
-    // Calcular el promedio de los 3 embeddings capturados
+    // Calcular el promedio de los 3 embeddings
     const numFeatures = this.capturedEmbeddings[0].length;
     const avgEmbedding = new Array(numFeatures).fill(0);
     for (let i = 0; i < numFeatures; i++) {
@@ -127,21 +96,20 @@ export class DoctorRegisterComponent implements OnDestroy {
       avgEmbedding[i] = sum / this.capturedEmbeddings.length;
     }
 
-    const doctorData = {
-      ...this.registerForm.value,
-      faceEmbedding: avgEmbedding
-    };
-
-    this.authService.registerDoctor(doctorData).subscribe({
+    this.authService.saveDoctorBiometrics(this.currentUser.id, avgEmbedding).subscribe({
       next: () => {
         this.loading = false;
         this.showSuccessModal = true;
         this.stopCamera();
+        
+        // Actualizar el estado del usuario localmente
+        this.currentUser.has_biometrics = true;
+        sessionStorage.setItem('user', JSON.stringify(this.currentUser));
       },
       error: (err) => {
-        console.error('Error de registro:', err);
+        console.error('Error al guardar biometría:', err);
         this.loading = false;
-        this.error = 'Error al registrar el profesional médico.';
+        this.error = 'Error al registrar su biometría facial.';
       }
     });
   }
@@ -167,7 +135,7 @@ export class DoctorRegisterComponent implements OnDestroy {
   }
 
   goToDashboard(): void {
-    this.router.navigate(['/login'], { queryParams: { role: 'doctor' } });
+    this.router.navigate(['/dashboard']);
   }
 
   ngOnDestroy(): void {
