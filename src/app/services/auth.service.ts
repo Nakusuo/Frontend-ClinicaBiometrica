@@ -8,7 +8,7 @@ export class AuthService {
   private apiUrl = environment.apiUrl;
   private loggedIn = new BehaviorSubject<boolean>(false);
   private currentUser = new BehaviorSubject<any | null>(null);
-  private userRole = new BehaviorSubject<'doctor' | 'paciente' | null>(null);
+  private userRole = new BehaviorSubject<'doctor' | 'paciente' | 'admin' | null>(null);
 
   isLoggedIn$ = this.loggedIn.asObservable();
   currentUser$ = this.currentUser.asObservable();
@@ -36,7 +36,7 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/auth/register-patient`, patient);
   }
 
-  setSession(user: any, role: 'doctor' | 'paciente', token?: string): void {
+  setSession(user: any, role: 'doctor' | 'paciente' | 'admin', token?: string): void {
     this.loggedIn.next(true);
     this.currentUser.next(user);
     this.userRole.next(role);
@@ -71,9 +71,9 @@ export class AuthService {
            !!sessionStorage.getItem('doctor');
   }
 
-  getUserRole(): 'doctor' | 'paciente' | null {
+  getUserRole(): 'doctor' | 'paciente' | 'admin' | null {
     if (this.userRole.value) return this.userRole.value;
-    return sessionStorage.getItem('role') as 'doctor' | 'paciente' | null;
+    return sessionStorage.getItem('role') as 'doctor' | 'paciente' | 'admin' | null;
   }
 
   getCurrentUser(): any {

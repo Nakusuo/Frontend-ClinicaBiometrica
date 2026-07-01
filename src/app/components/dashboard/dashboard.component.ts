@@ -1,4 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
@@ -14,6 +15,17 @@ export class DashboardComponent implements OnInit, OnDestroy {
   doctor: Doctor | null = null;
   appointments: Appointment[] = [];
   loading = true;
+
+  isAdmin = false;
+  doctors: any[] = [];
+  showAddModal = false;
+  doctorForm: FormGroup;
+  specialties = [
+    'Cardiología', 'Pediatría', 'Neurología',
+    'Medicina General', 'Dermatología',
+  ];
+  activeTab: 'citas' | 'pacientes' = 'citas';
+  patients: any[] = [];
 
   // Habilitar campos en tiempo real vacíos al inicio
   availabilityStatus = 'Disponible';
@@ -34,15 +46,32 @@ export class DashboardComponent implements OnInit, OnDestroy {
   constructor(
     private authService: AuthService,
     private apiService: ApiService,
-    private router: Router
-  ) {}
+    private router: Router,
+    private fb: FormBuilder
+  ) {
+    this.doctorForm = this.fb.group({
+      nombres: ['', Validators.required],
+      apellidos: ['', Validators.required],
+      correo: ['', [Validators.required, Validators.email]],
+      especialidad: ['', Validators.required],
+      cedula: ['', Validators.required],
+      telefono: ['', Validators.required],
+      password: ['', [Validators.required, Validators.minLength(8)]],
+    });
+  }
 
   ngOnInit(): void {
     const user = this.authService.getCurrentUser();
     this.doctor = user;
     if (user) {
-      this.loadAppointments(user.id);
-      this.connectWebSocket(user.id);
+      this.isAdmin = user.rol === 'admin';
+      if (this.isAdmin) {
+        this.loadDoctors();
+      } else {
+        this.loadAppointments(user.id);
+        this.loadPatients();
+        this.connectWebSocket(user.id);
+      }
     } else {
       this.router.navigate(['/login']);
     }
@@ -88,6 +117,64 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.loading = false;
       },
     });
+  }
+
+  loadDoctors(): void {
+    this.apiService.getDoctores().subscribe({
+      next: (docs) => {
+        this.doctors = docs.filter(d => d.rol !== 'admin');
+        this.loading = false;
+      },
+      error: () => {
+        this.loading = false;
+      }
+    });
+  }
+
+  loadPatients(): void {
+    this.apiService.getPacientes().subscribe({
+      next: (pats) => {
+        this.patients = pats;
+      },
+      error: (err) => console.error(err)
+    });
+  }
+
+  registerDoctor(): void {
+    if (this.doctorForm.invalid) return;
+    this.loading = true;
+    const formVal = this.doctorForm.value;
+    
+    this.apiService.createDoctor({
+      nombres: formVal.nombres,
+      apellidos: formVal.apellidos,
+      correo: formVal.correo,
+      especialidad: formVal.especialidad,
+      cedula: formVal.cedula,
+      telefono: formVal.telefono,
+      password: formVal.password,
+      activo: true
+    }).subscribe({
+      next: () => {
+        this.loading = false;
+        this.showAddModal = false;
+        this.doctorForm.reset({ especialidad: '' });
+        this.loadDoctors();
+      },
+      error: (err) => {
+        this.loading = false;
+        alert(err.error?.detail || 'Error al registrar al médico.');
+      }
+    });
+  }
+
+  deleteDoctor(id: number): void {
+    if (confirm('¿Está seguro de que desea eliminar a este médico de la plataforma?')) {
+      this.apiService.deleteDoctor(id).subscribe({
+        next: () => this.loadDoctors(),
+        error: (err) => console.error(err)
+      });
+    }
   }
 
   setAvailability(status: string): void {

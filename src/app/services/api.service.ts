@@ -59,4 +59,30 @@ export class ApiService {
   terminarLlamada(citaId: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/llamadas/${citaId}/terminar`, {});
   }
+
+  // Doctores (CRUD para Admin)
+  getDoctores(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/doctores`);
+  }
+
+  createDoctor(doctor: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/doctores`, doctor);
+  }
+
+  deleteDoctor(id: number): Observable<any> {
+    return this.http.delete<any>(`${this.apiUrl}/doctores/${id}`);
+  }
+
+  solicitarConsultaInmediata(pacienteId: number, telefono: string, motivo: string, especialidad: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/citas/solicitar-consulta-inmediata`, {
+      paciente_id: pacienteId,
+      telefono,
+      motivo,
+      especialidad
+    });
+  }
+
+  getPacientes(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/pacientes`);
+  }
 }

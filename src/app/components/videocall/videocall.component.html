@@ -246,6 +246,39 @@
         </div>
 
       </form>
+
+      <!-- Historial Médico / Antecedentes (Solo Lectura durante la llamada) -->
+      <div class="border-t border-slate-200 pt-6 space-y-4">
+        <h3 class="text-xs uppercase font-bold text-slate-400 tracking-wider flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-sm text-primary">history</span>
+          Antecedentes Clínicos del Paciente
+        </h3>
+
+        <div *ngIf="patientExpedients.length === 0" class="text-center py-6 bg-white border border-slate-100 rounded-xl text-xs text-slate-400">
+          No hay antecedentes registrados para este paciente.
+        </div>
+
+        <div *ngIf="patientExpedients.length > 0" class="space-y-4 max-h-[300px] overflow-y-auto pr-1">
+          <div *ngFor="let exp of patientExpedients" class="p-4 bg-white rounded-xl border border-slate-100 space-y-2">
+            <div class="flex justify-between text-[10px] font-semibold text-slate-400">
+              <span>REGISTRO ANTERIOR</span>
+              <span>{{ exp.fecha }}</span>
+            </div>
+            <div>
+              <span class="text-[10px] font-bold uppercase text-primary">Diagnóstico:</span>
+              <p class="text-xs text-slate-700 font-medium mt-0.5">{{ exp.diagnostico }}</p>
+            </div>
+            <div>
+              <span class="text-[10px] font-bold uppercase text-secondary">Tratamiento:</span>
+              <p class="text-xs text-slate-700 font-medium mt-0.5">{{ exp.tratamiento }}</p>
+            </div>
+            <div *ngIf="exp.observaciones">
+              <span class="text-[10px] font-bold uppercase text-slate-400">Notas:</span>
+              <p class="text-xs text-slate-500 italic mt-0.5">{{ exp.observaciones }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </aside>
   

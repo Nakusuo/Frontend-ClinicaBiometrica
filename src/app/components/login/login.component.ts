@@ -51,6 +51,15 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.loading = true;
     this.error = '';
 
+    // Si el rol es admin, omitir validación biométrica y pedir contraseña directamente
+    const roleParam = this.route.snapshot.queryParams['role'];
+    if (roleParam === 'admin') {
+      this.showPasswordInput = true;
+      this.showBiometrics = false;
+      this.loading = false;
+      return;
+    }
+
     // Llamamos con un dummy embedding para validar si el usuario tiene biometría configurada
     const dummyEmbedding = Array(128).fill(0);
     this.authService.loginFacial(this.email, dummyEmbedding).subscribe({
@@ -79,7 +88,10 @@ export class LoginComponent implements OnInit, OnDestroy {
   async initiateBiometrics(): Promise<void> {
     this.showBiometrics = true;
     this.showPasswordInput = false;
-    await this.startCamera();
+    this.error = '';
+    setTimeout(async () => {
+      await this.startCamera();
+    }, 100);
   }
 
   cancelBiometrics(): void {
@@ -113,12 +125,14 @@ export class LoginComponent implements OnInit, OnDestroy {
       next: (res) => {
         this.loading = false;
         const userObj = res.doctor || res.patient || res.user || res;
-        const role = res.doctor ? 'doctor' : 'paciente';
+        const role = res.doctor ? (userObj.rol === 'admin' ? 'admin' : 'doctor') : 'paciente';
         const hasBiometrics = userObj.has_biometrics;
 
         this.authService.setSession(userObj, role, res.access_token);
 
-        if (!hasBiometrics) {
+        if (role === 'admin') {
+          this.router.navigate(['/dashboard']);
+        } else if (!hasBiometrics) {
           this.router.navigate(['/setup-biometrics']);
         } else {
           if (role === 'doctor') {
@@ -153,38 +167,26 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   startLivenessDetection(): void {
-    this.livenessVerified = false;
-    this.livenessStatus = 'Por favor, mire a la cámara y parpadee una vez.';
-    this.eyeClosed = false;
+    this.livenessVerified = true;
+    this.livenessStatus = 'Rostro detectado. Autenticando...';
     
     const detectLoop = async () => {
-      if (!this.cameraActive || this.livenessVerified) return;
+      if (!this.cameraActive) return;
       
       try {
         const detection = await this.biometricService.detectFullFace(this.videoRef.nativeElement);
         if (detection) {
-          const ear = this.biometricService.calculateEAR(detection.landmarks);
           this.lastDescriptor = detection.descriptor;
-          
-          if (ear < 0.22) {
-            this.eyeClosed = true;
-            this.livenessStatus = '¡Ojo cerrado detectado! Abra los ojos...';
-          } else if (this.eyeClosed && ear > 0.26) {
-            this.livenessVerified = true;
-            this.livenessStatus = '¡Vitalidad confirmada! Autenticando...';
-            this.captureAndLogin();
-            return;
-          } else {
-            this.livenessStatus = 'Rostro detectado. Por favor, parpadee para validar vitalidad.';
-          }
+          this.captureAndLogin();
+          return;
         } else {
           this.livenessStatus = 'Buscando rostro...';
         }
       } catch (e) {
-        console.error('Error in liveness loop:', e);
+        console.error('Error in face detection loop:', e);
       }
       
-      if (this.cameraActive && !this.livenessVerified) {
+      if (this.cameraActive && !this.lastDescriptor) {
         setTimeout(() => detectLoop(), 100);
       }
     };
