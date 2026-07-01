@@ -1,391 +1,102 @@
-# Frontend - Plataforma de Telemedicina Integrada
+# 🏥 Plataforma de Telemedicina Integrada con Autenticación Biométrica
 
-Portal web de telemedicina desarrollado con **Angular 16+** y **Angular Material**. Incluye autenticación biométrica facial, gestión de citas y videollamadas WebRTC.
+Este proyecto es una solución integral de telemedicina que unifica la gestión de consultas virtuales, expedientes clínicos electrónicos en tiempo real y la validación de identidad mediante **biometría facial**. Desarrollado bajo estándares profesionales para clínicas de atención virtual de alta seguridad.
 
-## 📋 Requisitos previos
+---
 
-- **Node.js** 16+ (`node --version`)
-- **npm** 7+ (`npm --version`)
-- **Git** 2.25+ (`git --version`)
-- Terminal Linux/macOS o WSL en Windows
-- Cámara web funcional (para biometría facial)
+## 🔑 Credenciales y Cuentas Preconfiguradas para Demostraciones
 
-## 🚀 Setup inicial (primera vez)
+Para facilitar la ejecución de pruebas y demostraciones en tiempo real del sistema, la base de datos local SQLite incluye las siguientes cuentas pre-sembradas:
 
-```bash
-# 1. Clonar repositorio
-git clone https://github.com/tu-usuario/telemedicina.git
-cd telemedicina/frontend
+### 1. 🛠️ Administrador (Acceso tradicional)
+* **Correo**: `admin@email.com`
+* **Contraseña**: `admin123`
+* **Permisos**: Registro y gestión de personal médico, creación de doctores de turno.
+* **Nota**: Este rol no requiere validación facial.
 
-# 2. Instalar dependencias
-npm install
+### 2. 🥼 Médico de Turno (Acceso Biométrico / Bypass)
+* **Nombre**: Dr. Carlos Ruiz
+* **Especialidad**: Medicina General
+* **Correo**: `carlos@email.com`
+* **Contraseña**: `password123`
+* **Permisos**: Recepción de consultas inmediatas (videollamadas WebRTC), edición de recetas en llamada y visor de antecedentes.
+* **Acceso Biométrico**: Registrado con patrón facial demo. Puedes iniciar sesión usando el botón **Bypass (Sin Cámara)** de la app para simular su autenticación de inmediato.
 
-# 3. Verificar que funciona
-npm start
-```
+### 3. 👤 Paciente Demostración (Usuario Viejo con Historial)
+* **Nombre**: Maria Delgado
+* **Correo**: `maria@email.com`
+* **Contraseña**: `password123`
+* **DNI**: `12345678`
+* **Teléfono**: `+51 987 654 321`
+* **Acceso Biométrico**: Registrada con patrón facial demo. Puedes iniciar sesión usando el botón **Bypass (Sin Cámara)** en la sección de login del paciente.
+* **Historial Médico Registrado**: Cuenta con antecedentes previos de faringoamigdalitis y recetas activas visibles para el médico en llamada.
 
-El proyecto se abrirá en `http://localhost:4200`
+---
 
-## 📁 Estructura del proyecto
+## ⚡ Guía Rápida de Demostración del Flujo de Trabajo
 
-```
+Para simular una consulta médica virtual de principio a fin, sigue estos sencillos pasos:
+
+1. **Paso 1: Abrir el portal del Médico**
+   * Ve a [http://localhost:4200/login](http://localhost:4200/login), selecciona el rol **Médico**, haz clic en **Bypass (Sin Cámara)** para simular el reconocimiento facial y accede como **Dr. Carlos Ruiz**.
+   * Asegúrate de marcar tu estado de disponibilidad como **"Disponible"** en el dashboard del médico.
+
+2. **Paso 2: Solicitar Consulta como Paciente**
+   * En otra pestaña (o ventana de incógnito), abre [http://localhost:4200/login](http://localhost:4200/login), selecciona el rol **Paciente**, haz clic en **Bypass (Sin Cámara)** y accede como **Maria Delgado**.
+   * Haz clic en el botón **"Solicitar Teleconsulta Inmediata"** en la barra superior.
+   * Rellena el formulario con su número de teléfono, selecciona *Medicina General* e ingresa los síntomas. Haz clic en **"Iniciar Videollamada"**.
+
+3. **Paso 3: Realizar la Consulta y Guardar Historial**
+   * Al enviar el formulario, el paciente entrará en la interfaz de llamada y el **Stepper de Progreso** pasará automáticamente a la fase *"En Consulta"*.
+   * En la pantalla del doctor, aparecerá de inmediato una ventana de alerta de **Llamada Entrante**. Haz clic en **Aceptar**.
+   * Ambos entrarán a la interfaz de llamada WebRTC.
+   * El médico, sin salir de la llamada, podrá presionar el botón **"Escribir Diagnóstico"** para ver los **Antecedentes Clínicos del Paciente** (el historial clínico antiguo de Maria Delgado) y redactar la nueva receta. Al finalizar, el médico guarda la consulta y ambos vuelven a sus paneles de forma fluida.
+
+---
+
+## 🚀 Arquitectura y Tecnologías del Sistema
+
+### Frontend (Este Repositorio)
+* **Framework**: Angular 16+
+* **Diseño y Estilos**: TailwindCSS y Vanilla CSS (Aesthetics Premium basados en Material Design 3).
+* **Biometría Facial**: `face-api.js` (procesamiento local con TensorFlow.js en el cliente).
+* **Videollamadas**: WebRTC nativo mediante WebSockets de señalización en tiempo real.
+
+### Backend ([Ver Backend-ClinicaBiometrica](file:///C:/Users/Lenovo/Desktop/Backend-ClinicaBiometrica))
+* **Framework**: FastAPI (Python)
+* **Base de Datos**: SQLite (para desarrollo ágil sin dependencias complejas locales) y soporte nativo para PostgreSQL en producción.
+* **Seguridad**: Criptografía bcrypt para contraseñas tradicionales y tokens JWT para protección de endpoints.
+
+---
+
+## 📁 Estructura del Frontend
+
+```text
 src/
 ├── app/
 │   ├── components/
-│   │   ├── login/                # HU01: Login biométrico
-│   │   │   ├── login.component.ts
-│   │   │   ├── login.component.html
-│   │   │   └── login.component.css
-│   │   ├── dashboard/            # HU02: Dashboard doctor
-│   │   │   ├── dashboard.component.ts
-│   │   │   └── dashboard.component.html
-│   │   ├── patient-form/         # HU03: Formulario paciente
-│   │   │   ├── patient-form.component.ts
-│   │   │   └── patient-form.component.html
-│   │   ├── videocall/            # HU04-HU05: Videollamada WebRTC
-│   │   │   ├── videocall.component.ts
-│   │   │   └── videocall.component.html
-│   │   └── expedient/            # HU06: Visualización expediente
-│   │       ├── expedient.component.ts
-│   │       └── expedient.component.html
+│   │   ├── login/                # Autenticación facial biométrica
+│   │   ├── dashboard/            # Panel médico y de personal
+│   │   ├── patient-dashboard/    # Panel del paciente con control de citas y teleconsulta
+│   │   ├── videocall/            # Interfaz de videollamada WebRTC con panel integrado
+│   │   └── expedient/            # Gestión e historial clínico del paciente
 │   ├── services/
-│   │   ├── auth.service.ts       # Servicio de autenticación
-│   │   ├── api.service.ts        # Servicio HTTP hacia backend
-│   │   ├── biometric.service.ts  # Servicio de biometría facial
-│   │   └── webrtc.service.ts     # Servicio de videollamada
-│   ├── models/
-│   │   ├── patient.ts
-│   │   ├── doctor.ts
-│   │   ├── appointment.ts
-│   │   └── expedient.ts
-│   ├── guards/
-│   │   └── auth.guard.ts         # Protección de rutas
-│   ├── app.component.ts
-│   ├── app-routing.module.ts
-│   └── app.module.ts
-├── assets/
-│   └── images/
-├── styles.css                    # Estilos globales
-├── main.ts
-└── environments/
-    ├── environment.ts
-    └── environment.prod.ts
-
-angular.json
-tsconfig.json
-package.json
-.gitignore
-README.md
+│   │   ├── auth.service.ts       # Control de sesión
+│   │   ├── api.service.ts        # Peticiones HTTP al servidor REST
+│   │   └── biometric.service.ts  # Procesamiento de modelos faciales
 ```
 
-## 🛠️ Desarrollo
+---
 
-### Crear un componente nuevo
+## ⚙️ Configuración y Ejecución del Desarrollo
+
+### Instalar dependencias
 ```bash
-npx ng generate component components/mi-componente
+npm install
 ```
 
-### Crear un servicio nuevo
-```bash
-npx ng generate service services/mi-servicio
-```
-
-### Compilar para desarrollo
+### Iniciar el servidor local
 ```bash
 npm start
-# O en otra terminal:
-ng serve
 ```
-
-### Compilar para producción
-```bash
-npm run build
-# Genera carpeta dist/ lista para desplegar
-```
-
-### Servir frontend compilado (sin `npm start`)
-```bash
-# Opción 1: Usar http-server
-npm install -g http-server
-cd dist/telemedicina
-http-server -p 4200
-
-# Opción 2: Usar Python
-cd dist/telemedicina
-python3 -m http.server 4200
-```
-
-## 🔌 Conectar con Backend
-
-En `src/environments/environment.ts`:
-
-```typescript
-export const environment = {
-  production: false,
-  apiUrl: 'http://localhost:8000',  // URL del backend FastAPI
-  wsUrl: 'ws://localhost:8000',     // WebSocket para notificaciones
-};
-```
-
-### Ejemplo de llamada HTTP desde un servicio:
-
-```typescript
-// auth.service.ts
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../environments/environment';
-
-@Injectable({ providedIn: 'root' })
-export class AuthService {
-  private apiUrl = environment.apiUrl;
-
-  constructor(private http: HttpClient) {}
-
-  loginFacial(embedding: number[]): Observable<any> {
-    return this.http.post(`${this.apiUrl}/auth/facial-login`, {
-      embedding: embedding
-    });
-  }
-
-  getPaciente(id: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/pacientes/${id}`);
-  }
-}
-```
-
-## 🎥 Biometría Facial
-
-### Instalación de librería
-```bash
-npm install face-api.js
-```
-
-### Uso básico en componente
-
-```typescript
-import * as faceapi from 'face-api.js';
-
-export class LoginComponent {
-  async captureAndGenerateEmbedding() {
-    const video = document.getElementById('video') as HTMLVideoElement;
-    const detections = await faceapi
-      .detectSingleFace(video)
-      .withFaceLandmarks()
-      .withFaceDescriptors();
-    
-    const embedding = Array.from(detections.descriptor);
-    // Enviar embedding al backend
-    this.authService.loginFacial(embedding).subscribe(...);
-  }
-}
-```
-
-## 🎬 WebRTC para Videollamadas
-
-### Instalación
-```bash
-npm install simple-peer
-```
-
-### Uso básico
-
-```typescript
-import SimplePeer from 'simple-peer';
-
-export class VideocallComponent {
-  private peer: SimplePeer.Instance;
-
-  initializePeer(initiator: boolean) {
-    this.peer = new SimplePeer({
-      initiator: initiator,
-      trickIce: false,
-      config: {
-        iceServers: [
-          { urls: ['stun:stun.l.google.com:19302'] }
-        ]
-      }
-    });
-
-    this.peer.on('signal', data => {
-      // Enviar señal de WebRTC al otro usuario
-      console.log('Signal:', data);
-    });
-
-    this.peer.on('stream', (stream: MediaStream) => {
-      // Mostrar stream del otro usuario
-      const video = document.getElementById('remote-video') as HTMLVideoElement;
-      video.srcObject = stream;
-    });
-  }
-
-  startLocalStream() {
-    navigator.mediaDevices
-      .getUserMedia({ video: true, audio: true })
-      .then(stream => {
-        this.peer.addStream(stream);
-        const video = document.getElementById('local-video') as HTMLVideoElement;
-        video.srcObject = stream;
-      });
-  }
-}
-```
-
-## 📦 Angular Material
-
-Componentes recomendados para este proyecto:
-
-```bash
-ng add @angular/material
-```
-
-Uso en templates:
-
-```html
-<!-- Botones -->
-<button mat-raised-button color="primary">Click to Call</button>
-
-<!-- Formularios -->
-<mat-form-field>
-  <input matInput placeholder="Nombre">
-</mat-form-field>
-
-<!-- Diálogos -->
-<mat-dialog-container>
-  <h2>Confirmación</h2>
-  <p>¿Aceptar llamada?</p>
-</mat-dialog-container>
-
-<!-- Cards -->
-<mat-card>
-  <mat-card-title>Expediente Médico</mat-card-title>
-  <mat-card-content>
-    <p>Contenido</p>
-  </mat-card-content>
-</mat-card>
-```
-
-## 🧪 Testing
-
-### Ejecutar tests
-```bash
-npm test
-```
-
-### Ejemplo de test de componente
-
-```typescript
-// login.component.spec.ts
-import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { LoginComponent } from './login.component';
-
-describe('LoginComponent', () => {
-  let component: LoginComponent;
-  let fixture: ComponentFixture<LoginComponent>;
-
-  beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      declarations: [LoginComponent]
-    }).compileComponents();
-
-    fixture = TestBed.createComponent(LoginComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-  });
-
-  it('debería crear el componente', () => {
-    expect(component).toBeTruthy();
-  });
-
-  it('debería capturar rostro', async () => {
-    spyOn(component, 'captureAndGenerateEmbedding');
-    await component.captureAndGenerateEmbedding();
-    expect(component.captureAndGenerateEmbedding).toHaveBeenCalled();
-  });
-});
-```
-
-## 🌐 Despliegue
-
-### Compilar para producción
-```bash
-npm run build -- --configuration production
-```
-
-### Con Docker
-```bash
-docker build -t telemedicina-frontend .
-docker run -p 4200:80 telemedicina-frontend
-```
-
-### En servidor Linux
-```bash
-# Copiar carpeta dist/ a servidor
-scp -r dist/telemedicina user@servidor:/var/www/
-
-# En el servidor, servir con Nginx
-sudo nano /etc/nginx/sites-available/default
-# Configurar para servir desde /var/www/telemedicina
-sudo systemctl restart nginx
-```
-
-## 🐛 Troubleshooting
-
-### Error: "Cannot find module 'face-api.js'"
-```bash
-npm install face-api.js
-npm install @tensorflow/tfjs @tensorflow/tfjs-core @tensorflow/tfjs-converter
-```
-
-### Error: "CORS error al llamar backend"
-Asegúrate que el backend (FastAPI) tiene CORS habilitado:
-```python
-# En backend/app/main.py
-from fastapi.middleware.cors import CORSMiddleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:4200"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-```
-
-### Error: "ng: command not found"
-```bash
-npm install -g @angular/cli
-```
-
-### Video/audio no funciona
-- Verifica permisos de cámara/micrófono en navegador
-- Recarga la página (Ctrl+R)
-- Abre las DevTools (F12) y busca errores de console
-
-## 📚 Referencias
-
-- [Angular Official Docs](https://angular.io/docs)
-- [Angular Material](https://material.angular.io/)
-- [face-api.js](https://github.com/justadudewhohacks/face-api.js)
-- [WebRTC MDN](https://developer.mozilla.org/en-US/docs/Web/API/WebRTC_API)
-- [Simple Peer](https://github.com/feross/simple-peer)
-
-## 📝 Commits recomendados
-
-```bash
-# HU01: Login biométrico
-git add . && git commit -m "HU01: Implementar login con biometría facial"
-
-# HU02: Dashboard doctor
-git commit -m "HU02: Crear dashboard con citas programadas"
-
-# HU03: Formulario paciente
-git commit -m "HU03: Formulario de identificación del paciente"
-
-# HU04-05: Videollamada
-git commit -m "HU04-05: Implementar click to call y videollamada WebRTC"
-```
-
-## 👥 Autor
-
-Equipo Telemedicina - Laboratorio de Integración de Sistemas (UTP)
-
-## 📄 Licencia
-
-Código privado del proyecto académico.
+El portal de desarrollo estará disponible en `http://localhost:4200`.
