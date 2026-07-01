@@ -9,7 +9,7 @@ import { Router } from '@angular/router';
 export class RoleSelectorComponent {
   constructor(private router: Router) {}
 
-  selectRole(role: 'paciente' | 'doctor'): void {
+  selectRole(role: 'paciente' | 'doctor' | 'admin'): void {
     this.router.navigate(['/login'], { queryParams: { role } });
   }
 }

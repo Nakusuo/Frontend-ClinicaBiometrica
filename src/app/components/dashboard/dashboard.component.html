@@ -6,7 +6,7 @@
       <h1 class="text-xl font-bold text-primary">Telemedicina Integrada</h1>
     </div>
     <div class="flex items-center gap-4" *ngIf="doctor">
-      <span class="text-sm font-semibold text-slate-700">Dr. {{ doctor.nombre }} {{ doctor.apellido }}</span>
+      <span class="text-sm font-semibold text-slate-700">{{ doctor.rol === 'admin' ? 'Administrador' : 'Dr. ' + doctor.nombre + ' ' + doctor.apellido }}</span>
       <button (click)="logout()" class="text-on-surface-variant hover:bg-surface-container-highest p-2 rounded-full transition-all" title="Cerrar sesión">
         <span class="material-symbols-outlined">logout</span>
       </button>
@@ -15,124 +15,351 @@
 
   <main class="max-w-7xl mx-auto px-6 md:px-12 py-8 space-y-8">
     
-    <!-- Estado de Disponibilidad -->
-    <section class="bg-surface-container-lowest p-6 rounded-2xl shadow-sm border border-outline-variant/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-      <div>
-        <h2 class="text-base font-bold text-slate-400 uppercase tracking-wider">Estado de Disponibilidad</h2>
-      </div>
-      <div class="flex items-center gap-2">
-        <button (click)="setAvailability('Disponible')"
-                [ngClass]="availabilityStatus === 'Disponible' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-slate-100 text-slate-600 border-slate-200'"
-                class="px-4 py-2 rounded-full text-sm font-bold border transition-all">
-          Disponible
-        </button>
-        <button (click)="setAvailability('Ocupado')"
-                [ngClass]="availabilityStatus === 'Ocupado' ? 'bg-red-100 text-red-800 border-red-300' : 'bg-slate-100 text-slate-600 border-slate-200'"
-                class="px-4 py-2 rounded-full text-sm font-bold border transition-all">
-          Ocupado
-        </button>
-        <button (click)="setAvailability('No Disponible')"
-                [ngClass]="availabilityStatus === 'No Disponible' ? 'bg-slate-200 text-slate-700 border-slate-300' : 'bg-slate-100 text-slate-600 border-slate-200'"
-                class="px-4 py-2 rounded-full text-sm font-bold border transition-all">
-          No Disponible
-        </button>
-      </div>
-    </section>
-
-    <!-- Llamada Entrante Banner -->
-    <section *ngIf="incomingCall" class="bg-primary text-white p-6 md:p-8 rounded-2xl shadow-lg border border-primary-container relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6 animate-pulse">
-      <div class="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-primary-container to-transparent opacity-65"></div>
+    <!-- SECCIÓN ADMINISTRADOR -->
+    <div *ngIf="isAdmin" class="space-y-6">
       
-      <div class="relative z-10 flex items-center gap-4">
-        <div class="w-14 h-14 bg-secondary-container text-on-secondary-container rounded-full flex items-center justify-center text-xl font-bold">
-          <span class="material-symbols-outlined text-3xl animate-bounce">phone_in_talk</span>
-        </div>
+      <!-- Encabezado del Panel -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
         <div>
-          <span class="text-xs font-semibold uppercase tracking-widest text-secondary-container">Llamada Entrante</span>
-          <h2 class="text-xl font-bold mt-1">Paciente: {{ incomingCall.patientName }}</h2>
-          <p class="text-sm text-slate-300">{{ incomingCall.reason }}</p>
+          <h2 class="text-2xl font-bold text-slate-800">Panel de Administración de Personal</h2>
+          <p class="text-sm text-slate-500">Registra y gestiona los profesionales médicos autorizados en la plataforma.</p>
         </div>
-      </div>
-
-      <div class="relative z-10 flex gap-4 w-full md:w-auto">
-        <button (click)="rejectCall()" 
-                class="flex-1 md:flex-none px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-all shadow-md active:scale-95 duration-200">
-          Rechazar
-        </button>
-        <button (click)="acceptCall(incomingCall.id)" 
-                class="flex-1 md:flex-none px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all shadow-md active:scale-95 duration-200">
-          Aceptar
+        <button (click)="showAddModal = true" class="px-5 py-3 bg-primary text-white rounded-xl text-sm font-bold shadow-md hover:bg-primary/95 transition-all flex items-center gap-2">
+          <span class="material-symbols-outlined text-lg">person_add</span>
+          Registrar Nuevo Médico
         </button>
       </div>
-    </section>
 
-    <!-- Lower Section: Appointments & History -->
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-      
-      <!-- Citas de Hoy -->
-      <section class="lg:col-span-8 bg-surface-container-lowest p-6 md:p-8 rounded-2xl shadow-sm border border-outline-variant/30 space-y-6">
-        <div class="flex justify-between items-center pb-4 border-b border-outline-variant/20">
-          <h2 class="text-lg font-bold text-primary flex items-center gap-2">
-            <span class="material-symbols-outlined">clinical_notes</span>
-            Citas de Hoy
-          </h2>
-          <span class="text-xs font-bold text-slate-400 uppercase">Ver todas</span>
+      <!-- Listado de Médicos -->
+      <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+          <h3 class="font-bold text-slate-800 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">medical_information</span>
+            Médicos Registrados ({{ doctors.length }})
+          </h3>
         </div>
 
-        <div class="space-y-4">
-          <!-- Loop over actual appointments loaded from backend -->
-          <div *ngFor="let cita of appointments" 
-               class="p-4 bg-surface-container-low hover:bg-surface-container-high/50 transition-all rounded-xl border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 bg-primary-container text-white rounded-full flex items-center justify-center font-bold text-sm">
-                {{ cita.patientName ? cita.patientName[0] : '' }}{{ cita.patientName ? (cita.patientName.split(' ')[1]?.[0] || '') : '' }}
-              </div>
-              <div>
-                <h3 class="font-bold text-slate-800">{{ cita.patientName }}</h3>
-                <p class="text-xs text-on-surface-variant">{{ cita.age }} años • {{ cita.time }}</p>
-              </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-100">
+                <th class="p-6">Nombre del Médico</th>
+                <th class="p-6">Especialidad</th>
+                <th class="p-6">Correo</th>
+                <th class="p-6">Cédula</th>
+                <th class="p-6">Biometría Facial</th>
+                <th class="p-6 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr *ngIf="doctors.length === 0">
+                <td colspan="6" class="p-8 text-center text-slate-400">
+                  <span class="material-symbols-outlined text-4xl block mb-2">person_search</span>
+                  No hay médicos registrados.
+                </td>
+              </tr>
+              <tr *ngFor="let doc of doctors" class="hover:bg-slate-50/50 transition-colors">
+                <td class="p-6">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-primary/10 text-primary rounded-full flex items-center justify-center font-bold">
+                      {{ doc.nombres?.[0] }}{{ doc.apellidos?.[0] }}
+                    </div>
+                    <div>
+                      <h4 class="font-bold text-slate-800">Dr. {{ doc.nombres }} {{ doc.apellidos }}</h4>
+                      <p class="text-xs text-slate-500">{{ doc.telefono }}</p>
+                    </div>
+                  </div>
+                </td>
+                <td class="p-6 text-sm text-slate-600 font-medium">{{ doc.especialidad }}</td>
+                <td class="p-6 text-sm text-slate-500">{{ doc.correo }}</td>
+                <td class="p-6 text-sm font-semibold text-slate-600">{{ doc.cedula }}</td>
+                <td class="p-6">
+                  <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider flex items-center gap-1 w-max"
+                        [ngClass]="doc.embedding_facial ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'">
+                    <span class="w-1.5 h-1.5 rounded-full"
+                          [ngClass]="doc.embedding_facial ? 'bg-emerald-500' : 'bg-amber-500'"></span>
+                    {{ doc.embedding_facial ? 'Activa (Registrado)' : 'Pendiente' }}
+                  </span>
+                </td>
+                <td class="p-6 text-right">
+                  <button (click)="deleteDoctor(doc.id)" class="text-red-500 hover:bg-red-50 p-2 rounded-lg transition-all" title="Eliminar médico">
+                    <span class="material-symbols-outlined flex items-center justify-center">delete</span>
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal para Agregar Médico -->
+    <div *ngIf="showAddModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50">
+          <h3 class="font-bold text-slate-800 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">person_add</span>
+            Registrar Médico Autorizado
+          </h3>
+          <button (click)="showAddModal = false" class="text-slate-400 hover:bg-slate-200 p-1.5 rounded-full transition-all">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+
+        <form [formGroup]="doctorForm" (ngSubmit)="registerDoctor()" class="p-6 space-y-4">
+          <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <label class="text-xs font-bold text-slate-500">Nombres</label>
+              <input formControlName="nombres" type="text" placeholder="Ej. Carlos" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" />
             </div>
-            
-            <div class="flex items-center gap-3 justify-end">
-              <span class="px-3 py-1 rounded-full text-xs font-bold uppercase"
-                    [ngClass]="{
-                      'bg-blue-100 text-blue-700': cita.status === 'programada',
-                      'bg-emerald-100 text-emerald-700': cita.status === 'en_curso'
-                    }">
-                {{ cita.status === 'en_curso' ? 'En Curso' : 'Programada' }}
-              </span>
-              <button (click)="navigateToPatientForm(cita.id)" 
-                      class="px-4 py-2 border border-outline text-primary hover:bg-primary/5 rounded-lg text-xs font-bold transition-all">
-                Ficha Médica
-              </button>
-              <button (click)="startVideocall(cita.id)" 
-                      class="px-4 py-2 bg-secondary text-white hover:bg-secondary/90 rounded-lg text-xs font-bold transition-all shadow-sm">
-                Llamar
-              </button>
+            <div class="space-y-1">
+              <label class="text-xs font-bold text-slate-500">Apellidos</label>
+              <input formControlName="apellidos" type="text" placeholder="Ej. Mendoza" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" />
             </div>
           </div>
+
+          <div class="space-y-1">
+            <label class="text-xs font-bold text-slate-500">Correo Electrónico</label>
+            <input formControlName="correo" type="email" placeholder="doctor@clinica.com" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" />
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <label class="text-xs font-bold text-slate-500">Especialidad</label>
+              <select formControlName="especialidad" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none bg-white">
+                <option value="">Seleccione...</option>
+                <option *ngFor="let spec of specialties" [value]="spec">{{ spec }}</option>
+              </select>
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-bold text-slate-500">Cédula Profesional</label>
+              <input formControlName="cedula" type="text" placeholder="CMP12345" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" />
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-4">
+            <div class="space-y-1">
+              <label class="text-xs font-bold text-slate-500">Teléfono</label>
+              <input formControlName="telefono" type="text" placeholder="+51 999 111 222" class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" />
+            </div>
+            <div class="space-y-1">
+              <label class="text-xs font-bold text-slate-500">Contraseña Temporal</label>
+              <input formControlName="password" type="password" placeholder="Mínimo 8 caract." class="w-full px-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:border-primary focus:ring-1 focus:ring-primary outline-none" />
+            </div>
+          </div>
+
+          <div class="flex gap-3 justify-end pt-4 border-t border-slate-100">
+            <button type="button" (click)="showAddModal = false" class="px-5 py-2.5 border border-slate-200 text-slate-500 hover:bg-slate-50 rounded-xl text-sm font-bold transition-all">
+              Cancelar
+            </button>
+            <button type="submit" [disabled]="doctorForm.invalid || loading" class="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-bold shadow-md hover:bg-primary/95 transition-all disabled:opacity-50 disabled:shadow-none flex items-center gap-2">
+              <span *ngIf="loading" class="animate-spin border-2 border-white/30 border-t-white w-4 h-4 rounded-full"></span>
+              Registrar Médico
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- SECCIÓN DOCTOR -->
+    <div *ngIf="!isAdmin" class="space-y-8">
+      <!-- Estado de Disponibilidad -->
+      <section class="bg-surface-container-lowest p-6 rounded-2xl shadow-sm border border-outline-variant/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div class="flex flex-col sm:flex-row sm:items-center gap-4">
+          <h2 class="text-base font-bold text-slate-400 uppercase tracking-wider">Estado de Disponibilidad</h2>
+          <button (click)="startVideocall(1)" class="w-max px-4 py-1.5 bg-amber-600 hover:bg-amber-700 text-white rounded-full text-xs font-bold shadow-sm transition-all flex items-center gap-1">
+            <span class="material-symbols-outlined text-sm">video_call</span>
+            Simular Llamada de Prueba (ID: 1)
+          </button>
+        </div>
+        <div class="flex items-center gap-2">
+          <button (click)="setAvailability('Disponible')"
+                  [ngClass]="availabilityStatus === 'Disponible' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-slate-100 text-slate-600 border-slate-200'"
+                  class="px-4 py-2 rounded-full text-sm font-bold border transition-all">
+            Disponible
+          </button>
+          <button (click)="setAvailability('Ocupado')"
+                  [ngClass]="availabilityStatus === 'Ocupado' ? 'bg-red-100 text-red-800 border-red-300' : 'bg-slate-100 text-slate-600 border-slate-200'"
+                  class="px-4 py-2 rounded-full text-sm font-bold border transition-all">
+            Ocupado
+          </button>
+          <button (click)="setAvailability('No Disponible')"
+                  [ngClass]="availabilityStatus === 'No Disponible' ? 'bg-slate-200 text-slate-700 border-slate-300' : 'bg-slate-100 text-slate-600 border-slate-200'"
+                  class="px-4 py-2 rounded-full text-sm font-bold border transition-all">
+            No Disponible
+          </button>
         </div>
       </section>
 
-      <!-- Historial Reciente -->
-      <section class="lg:col-span-4 bg-surface-container-lowest p-6 rounded-2xl shadow-sm border border-outline-variant/30 space-y-6">
-        <div class="pb-4 border-b border-outline-variant/20">
-          <h2 class="text-lg font-bold text-primary flex items-center gap-2">
-            <span class="material-symbols-outlined">history</span>
-            Historial Reciente
-          </h2>
+      <!-- Pestañas de Navegación del Doctor -->
+      <div class="flex gap-4 border-b border-slate-200 pb-2 mb-6">
+        <button (click)="activeTab = 'citas'" 
+                [ngClass]="activeTab === 'citas' ? 'text-primary border-b-2 border-primary font-bold' : 'text-slate-500'" 
+                class="px-4 py-2 text-sm transition-all focus:outline-none flex items-center gap-1.5 cursor-pointer">
+          <span class="material-symbols-outlined text-sm">clinical_notes</span>
+          Citas de Hoy
+        </button>
+        <button (click)="activeTab = 'pacientes'" 
+                [ngClass]="activeTab === 'pacientes' ? 'text-primary border-b-2 border-primary font-bold' : 'text-slate-500'" 
+                class="px-4 py-2 text-sm transition-all focus:outline-none flex items-center gap-1.5 cursor-pointer">
+          <span class="material-symbols-outlined text-sm">people</span>
+          Fichas de Pacientes (Historial)
+        </button>
+      </div>
+
+      <!-- VISTA CITAS -->
+      <div *ngIf="activeTab === 'citas'" class="space-y-8 animate-in fade-in duration-200">
+        <!-- Llamada Entrante Banner -->
+        <section *ngIf="incomingCall" class="bg-primary text-white p-6 md:p-8 rounded-2xl shadow-lg border border-primary-container relative overflow-hidden flex flex-col md:flex-row md:items-center justify-between gap-6 animate-pulse">
+          <div class="absolute inset-0 bg-[radial-gradient(circle_at_bottom_left,_var(--tw-gradient-stops))] from-primary-container to-transparent opacity-65"></div>
+          
+          <div class="relative z-10 flex items-center gap-4">
+            <div class="w-14 h-14 bg-secondary-container text-on-secondary-container rounded-full flex items-center justify-center text-xl font-bold">
+              <span class="material-symbols-outlined text-3xl animate-bounce">phone_in_talk</span>
+            </div>
+            <div>
+              <span class="text-xs font-semibold uppercase tracking-widest text-secondary-container">Llamada Entrante</span>
+              <h2 class="text-xl font-bold mt-1">Paciente: {{ incomingCall.patientName }}</h2>
+              <p class="text-sm text-slate-300">{{ incomingCall.reason }}</p>
+            </div>
+          </div>
+
+          <div class="relative z-10 flex gap-4 w-full md:w-auto">
+            <button (click)="rejectCall()" 
+                    class="flex-1 md:flex-none px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl transition-all shadow-md active:scale-95 duration-200">
+              Rechazar
+            </button>
+            <button (click)="acceptCall(incomingCall.id)" 
+                    class="flex-1 md:flex-none px-6 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition-all shadow-md active:scale-95 duration-200">
+              Aceptar
+            </button>
+          </div>
+        </section>
+
+        <!-- Lower Section: Appointments & History -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          
+          <!-- Citas de Hoy -->
+          <section class="lg:col-span-8 bg-surface-container-lowest p-6 md:p-8 rounded-2xl shadow-sm border border-outline-variant/30 space-y-6">
+            <div class="flex justify-between items-center pb-4 border-b border-outline-variant/20">
+              <h2 class="text-lg font-bold text-primary flex items-center gap-2">
+                <span class="material-symbols-outlined">clinical_notes</span>
+                Citas de Hoy
+              </h2>
+              <span class="text-xs font-bold text-slate-400 uppercase">Ver todas</span>
+            </div>
+
+            <div class="space-y-4">
+              <!-- Loop over actual appointments loaded from backend -->
+              <div *ngFor="let cita of appointments" 
+                   class="p-4 bg-surface-container-low hover:bg-surface-container-high/50 transition-all rounded-xl border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-10 h-10 bg-primary-container text-white rounded-full flex items-center justify-center font-bold text-sm">
+                    {{ cita.patientName ? cita.patientName[0] : '' }}{{ cita.patientName ? (cita.patientName.split(' ')[1]?.[0] || '') : '' }}
+                  </div>
+                  <div>
+                    <h3 class="font-bold text-slate-800">{{ cita.patientName }}</h3>
+                    <p class="text-xs text-on-surface-variant">{{ cita.age }} años • {{ cita.time }}</p>
+                  </div>
+                </div>
+                
+                <div class="flex items-center gap-3 justify-end">
+                  <span class="px-3 py-1 rounded-full text-xs font-bold uppercase"
+                        [ngClass]="{
+                          'bg-blue-100 text-blue-700': cita.status === 'programada',
+                          'bg-emerald-100 text-emerald-700': cita.status === 'en_curso'
+                        }">
+                    {{ cita.status === 'en_curso' ? 'En Curso' : 'Programada' }}
+                  </span>
+                  <button (click)="navigateToPatientForm(cita.id)" 
+                          class="px-4 py-2 border border-outline text-primary hover:bg-primary/5 rounded-lg text-xs font-bold transition-all">
+                    Ficha Médica
+                  </button>
+                  <button (click)="startVideocall(cita.id)" 
+                          class="px-4 py-2 bg-secondary text-white hover:bg-secondary/90 rounded-lg text-xs font-bold transition-all shadow-sm">
+                    Llamar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- Historial Reciente -->
+          <section class="lg:col-span-4 bg-surface-container-lowest p-6 rounded-2xl shadow-sm border border-outline-variant/30 space-y-6">
+            <div class="pb-4 border-b border-outline-variant/20">
+              <h2 class="text-lg font-bold text-primary flex items-center gap-2">
+                <span class="material-symbols-outlined">history</span>
+                Historial Reciente
+              </h2>
+            </div>
+
+            <div class="space-y-4">
+              <div *ngFor="let item of recentHistory" class="p-3 bg-surface-container-low rounded-xl">
+                <div class="flex justify-between text-xs font-bold text-slate-400 mb-1">
+                  <span>{{ item.patientName }}</span>
+                  <span>{{ item.date }}</span>
+                </div>
+                <p class="text-sm text-slate-700 font-medium">{{ item.diagnostic }}</p>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <!-- VISTA PACIENTES (HISTORIAL) -->
+      <div *ngIf="activeTab === 'pacientes'" class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden animate-in fade-in duration-200">
+        <div class="p-6 border-b border-slate-100">
+          <h3 class="font-bold text-slate-800 flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">groups</span>
+            Base de Pacientes Registrados ({{ patients.length }})
+          </h3>
         </div>
 
-        <div class="space-y-4">
-          <div *ngFor="let item of recentHistory" class="p-3 bg-surface-container-low rounded-xl">
-            <div class="flex justify-between text-xs font-bold text-slate-400 mb-1">
-              <span>{{ item.patientName }}</span>
-              <span>{{ item.date }}</span>
-            </div>
-            <p class="text-sm text-slate-700 font-medium">{{ item.diagnostic }}</p>
-          </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left border-collapse">
+            <thead>
+              <tr class="bg-slate-50 text-xs font-semibold text-slate-500 uppercase tracking-wider border-b border-slate-100">
+                <th class="p-6">Nombre del Paciente</th>
+                <th class="p-6">DNI</th>
+                <th class="p-6">Correo</th>
+                <th class="p-6">Teléfono (Contacto)</th>
+                <th class="p-6">Fecha Nacimiento</th>
+                <th class="p-6 text-right">Acciones</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <tr *ngIf="patients.length === 0">
+                <td colspan="6" class="p-8 text-center text-slate-400">
+                  <span class="material-symbols-outlined text-4xl block mb-2">person_search</span>
+                  No hay pacientes registrados en la clínica.
+                </td>
+              </tr>
+              <tr *ngFor="let pat of patients" class="hover:bg-slate-50/50 transition-colors">
+                <td class="p-6">
+                  <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-secondary/15 text-secondary rounded-full flex items-center justify-center font-bold">
+                      {{ pat.nombres?.[0] }}{{ pat.apellidos?.[0] }}
+                    </div>
+                    <div>
+                      <h4 class="font-bold text-slate-800">{{ pat.nombres }} {{ pat.apellidos }}</h4>
+                    </div>
+                  </div>
+                </td>
+                <td class="p-6 text-sm font-semibold text-slate-600">{{ pat.dni }}</td>
+                <td class="p-6 text-sm text-slate-500">{{ pat.correo }}</td>
+                <td class="p-6 text-sm text-slate-600">{{ pat.telefono || 'No registrado' }}</td>
+                <td class="p-6 text-sm text-slate-500">{{ pat.fecha_nacimiento }}</td>
+                <td class="p-6 text-right">
+                  <a [routerLink]="['/expedient', pat.id]" class="inline-flex items-center gap-1.5 px-4 py-2 border border-primary text-primary hover:bg-primary/5 rounded-xl text-xs font-bold transition-all cursor-pointer">
+                    <span class="material-symbols-outlined text-xs">folder_open</span>
+                    Ver Expediente
+                  </a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-      </section>
+      </div>
 
     </div>
   </main>

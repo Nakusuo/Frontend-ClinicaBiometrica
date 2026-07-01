@@ -6,4 +6,5 @@ export interface Doctor {
   email: string;
   telefono: string;
   faceEmbedding?: number[];
+  rol?: string;
 }

@@ -14,7 +14,7 @@ export class ExpedientComponent implements OnInit {
   patient: Patient | null = null;
   expedients: Expedient[] = [];
   loading = true;
-  role: 'doctor' | 'paciente' | null = null;
+  role: 'doctor' | 'paciente' | 'admin' | null = null;
   patientId = 0;
 
   constructor(

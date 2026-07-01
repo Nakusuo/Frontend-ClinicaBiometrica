@@ -20,7 +20,7 @@ export class VideocallComponent implements OnInit, OnDestroy {
 
   cita: any = null;
   patient: Patient | null = null;
-  role: 'doctor' | 'paciente' | null = null;
+  role: 'doctor' | 'paciente' | 'admin' | null = null;
   audioMuted = false;
   videoMuted = false;
 
@@ -33,6 +33,7 @@ export class VideocallComponent implements OnInit, OnDestroy {
   consultationDate = '';
   submitting = false;
   successMessage = '';
+  patientExpedients: any[] = [];
 
   constructor(
     private route: ActivatedRoute, 
@@ -80,6 +81,7 @@ export class VideocallComponent implements OnInit, OnDestroy {
         this.apiService.getPaciente(cita.patientId).subscribe({
           next: (pat) => {
             this.patient = pat;
+            this.loadPatientExpedients(pat.id);
             this.startCall();
           },
           error: () => this.fallbackSetup()
@@ -105,7 +107,17 @@ export class VideocallComponent implements OnInit, OnDestroy {
       doctorId: 1,
       patientId: 1
     };
+    this.loadPatientExpedients(1);
     this.startCall();
+  }
+
+  loadPatientExpedients(patientId: number): void {
+    this.apiService.getExpediente(patientId).subscribe({
+      next: (exps) => {
+        this.patientExpedients = exps;
+      },
+      error: (err) => console.error('Error al cargar expedientes previos:', err)
+    });
   }
 
   async startCall(): Promise<void> {
