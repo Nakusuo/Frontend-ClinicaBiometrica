@@ -143,7 +143,7 @@
             </button>
 
             <!-- Simular Captura Button -->
-            <button *ngIf="captures < 3" 
+            <button *ngIf="allowBypass && captures < 3" 
                     (click)="bypassCaptures()" 
                     class="w-full bg-amber-600 hover:bg-amber-700 text-white font-medium py-3 rounded-full transition-all shadow-sm flex items-center justify-center gap-2 mt-2">
               <span class="material-symbols-outlined text-base">face</span>
