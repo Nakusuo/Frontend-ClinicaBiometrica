@@ -34,7 +34,7 @@ export class VideocallComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.appointmentId = Number(this.route.snapshot.paramMap.get('id'));
     this.role = this.authService.getUserRole();
-    
+
     this.loadPatientFromAppointment();
 
     this.webrtcService.streamEvent.subscribe(stream => {
@@ -63,23 +63,18 @@ export class VideocallComponent implements OnInit, OnDestroy {
     });
   }
 
+  // Sin cita o paciente reales no se inicia la llamada (antes se inventaba un paciente de ejemplo)
   private fallbackSetup(): void {
-    this.patient = {
-      id: 1,
-      nombre: 'Carlos',
-      apellido: 'Ruiz',
-      dni: '76543210',
-      fechaNacimiento: '1981-05-15',
-      telefono: '+51 987 654 321',
-      email: 'carlos.ruiz@email.com',
-      direccion: 'Lima, Perú'
-    };
-    this.cita = {
-      id: this.appointmentId,
-      doctorId: 1,
-      patientId: 1
-    };
-    this.startCall();
+    this.callError = 'No se pudo cargar la cita. Vuelve a tu panel e inténtalo de nuevo.';
+  }
+
+  retry(): void {
+    this.callError = '';
+    if (this.cita && this.patient) {
+      this.startCall();
+    } else {
+      this.loadPatientFromAppointment();
+    }
   }
 
   async startCall(): Promise<void> {

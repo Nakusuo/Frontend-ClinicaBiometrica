@@ -7,7 +7,8 @@ export interface Appointment {
   estado: 'programada' | 'en_curso' | 'finalizada' | 'cancelada';
   motivo: string;
   patientName?: string;
-  age?: number;
+  doctorName?: string | null;
+  age?: number | null;
   time?: string;
   status?: string;
 }

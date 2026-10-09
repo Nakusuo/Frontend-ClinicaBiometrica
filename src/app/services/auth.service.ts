@@ -69,6 +69,13 @@ export class AuthService {
     return true;
   }
 
+  /** Actualiza datos del usuario guardado (por ejemplo, tras registrar su rostro). */
+  updateCurrentUser(changes: Record<string, unknown>): void {
+    const user = { ...this.getCurrentUser(), ...changes };
+    this.currentUser.next(user);
+    sessionStorage.setItem('user', JSON.stringify(user));
+  }
+
   getUserRole(): UserRole | null {
     if (this.userRole.value) return this.userRole.value;
     return sessionStorage.getItem('role') as UserRole | null;
