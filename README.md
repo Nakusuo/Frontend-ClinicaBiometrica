@@ -8,7 +8,7 @@ Portal web de telemedicina desarrollado con **Angular 16+** y **Angular Material
 
 ## 📋 Requisitos previos
 
-- **Node.js** 16+ (`node --version`)
+- **Node.js** 16 o 18 (`node --version`). Angular 16 no soporta oficialmente versiones más nuevas.
 - **npm** 7+ (`npm --version`)
 - **Git** 2.25+ (`git --version`)
 - Terminal Linux/macOS o WSL en Windows
@@ -100,6 +100,14 @@ npm start
 # O en otra terminal:
 ng serve
 ```
+
+### Tests
+
+```bash
+npx ng test --watch=false --browsers=ChromeHeadless
+```
+
+GitHub Actions corre los tests y el build de producción en cada PR.
 
 ### Compilar para producción
 ```bash

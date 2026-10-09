@@ -1,0 +1,62 @@
+<div class="surface min-h-screen flex items-center justify-center font-roboto bg-slate-50 p-4">
+  <mat-card class="w-full max-w-[420px] p-8 rounded-2xl shadow-lg border border-slate-100 bg-white space-y-6">
+    <div class="text-center space-y-1">
+      <div class="flex items-center justify-center gap-2 text-primary">
+        <span class="material-symbols-outlined text-3xl">face</span>
+        <h1 class="text-xl font-bold text-primary">Registrar mi rostro</h1>
+      </div>
+      <p class="text-xs text-on-surface-variant">
+        Toma {{ totalSamples }} capturas para poder ingresar con reconocimiento facial.
+      </p>
+    </div>
+
+    <div *ngIf="success" class="text-center space-y-4">
+      <span class="material-symbols-outlined text-5xl text-emerald-600">verified</span>
+      <p class="text-sm text-slate-700">Listo. La próxima vez puedes ingresar con tu rostro.</p>
+      <button (click)="goBack()" class="w-full py-3.5 bg-primary text-white font-bold rounded-xl text-sm">Volver a mi panel</button>
+    </div>
+
+    <ng-container *ngIf="!success">
+      <div class="flex flex-col items-center">
+        <div class="relative w-64 h-64 rounded-full overflow-hidden border-4 border-outline-variant bg-slate-900 shadow-inner">
+          <video #video autoplay muted playsinline class="absolute inset-0 w-full h-full object-cover"></video>
+          <div *ngIf="!cameraActive" class="absolute inset-0 flex items-center justify-center text-white/70 text-xs">
+            Cámara apagada
+          </div>
+        </div>
+        <p class="text-xs text-slate-500 mt-4 font-semibold">
+          Captura {{ samples.length }}/{{ totalSamples }}
+        </p>
+      </div>
+
+      <div *ngIf="error" role="alert" class="px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">{{ error }}</div>
+
+      <div class="space-y-3">
+        <button *ngIf="!cameraActive" (click)="startCamera()" [disabled]="loading"
+                class="w-full py-3.5 bg-primary text-white font-bold rounded-xl text-sm disabled:bg-slate-200 disabled:text-slate-400">
+          {{ loading ? 'Iniciando cámara...' : 'Encender cámara' }}
+        </button>
+
+        <button *ngIf="cameraActive && samples.length < totalSamples" (click)="captureSample()" [disabled]="loading"
+                class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm disabled:bg-slate-200 disabled:text-slate-400">
+          {{ loading ? 'Procesando...' : 'Capturar' }}
+        </button>
+
+        <button *ngIf="samples.length >= totalSamples" (click)="save()" [disabled]="saving"
+                class="w-full py-3.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-sm disabled:bg-slate-200 disabled:text-slate-400">
+          {{ saving ? 'Guardando...' : 'Guardar mi rostro' }}
+        </button>
+
+        <button *ngIf="samples.length > 0 && !saving" (click)="restart()"
+                class="w-full py-3 border border-slate-200 text-slate-500 hover:bg-slate-100 rounded-xl text-xs font-semibold">
+          Empezar de nuevo
+        </button>
+
+        <button (click)="goBack()"
+                class="w-full py-3 border border-slate-200 text-slate-500 hover:bg-slate-100 rounded-xl text-xs font-semibold">
+          Cancelar
+        </button>
+      </div>
+    </ng-container>
+  </mat-card>
+</div>
