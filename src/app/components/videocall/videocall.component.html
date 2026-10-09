@@ -1,5 +1,5 @@
 <div class="relative w-full h-screen bg-slate-950 overflow-hidden font-roboto text-white flex flex-col">
-  
+
   <!-- Call Header Overlay -->
   <header class="absolute top-0 left-0 right-0 z-30 bg-gradient-to-b from-black/80 to-transparent p-6 flex justify-between items-center">
     <div class="flex items-center gap-3">
@@ -20,7 +20,7 @@
   <!-- Main Video Area (Remote Video) -->
   <div class="flex-grow w-full h-full relative">
     <video #remoteVideo autoplay playsinline class="w-full h-full object-cover"></video>
-    
+
     <!-- If remote stream is not loaded yet, show a clean mockup background -->
     <div *ngIf="!inCall" class="absolute inset-0 bg-slate-900/90 flex flex-col items-center justify-center gap-4 z-10">
       <mat-spinner diameter="50" color="accent"></mat-spinner>
@@ -33,7 +33,7 @@
         <span class="material-symbols-outlined">error</span>
         <span>{{ callError }}</span>
       </div>
-      <button (click)="startCall()" class="underline font-bold text-xs bg-black/10 px-3 py-1 rounded-lg">Reintentar</button>
+      <button (click)="retry()" class="underline font-bold text-xs bg-black/10 px-3 py-1 rounded-lg">Reintentar</button>
     </div>
 
     <!-- Floating PIP Local Video (Own Feed) -->
@@ -47,7 +47,7 @@
 
   <!-- Floating Call Control Panel Overlay -->
   <div class="absolute bottom-6 inset-x-0 z-30 flex flex-col items-center gap-4 px-6">
-    
+
     <!-- Floating Toolbar -->
     <div class="flex items-center gap-4 bg-slate-900/90 backdrop-blur-md px-6 py-3.5 rounded-full border border-white/10 shadow-2xl">
       <!-- Toggle Audio -->

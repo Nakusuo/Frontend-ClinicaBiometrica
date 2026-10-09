@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
 import { Patient } from '../../models/patient';
+import { edadTexto } from '../../utils/fechas';
 import { Expedient } from '../../models/expedient';
 
 @Component({
@@ -31,21 +32,13 @@ export class ExpedientComponent implements OnInit {
     this.loadExpedients(this.patientId);
   }
 
+  /** Alergias del expediente separadas por coma; vacío si no se registraron. */
+  get allergies(): string[] {
+    return (this.patient?.alergias ?? '').split(',').map((a) => a.trim()).filter(Boolean);
+  }
+
   getAge(birthDateString?: string): string {
-    if (!birthDateString) return 'No especificada';
-    try {
-      const today = new Date();
-      const birthDate = new Date(birthDateString);
-      if (isNaN(birthDate.getTime())) return 'No especificada';
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const m = today.getMonth() - birthDate.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-      }
-      return age + ' años';
-    } catch {
-      return 'No especificada';
-    }
+    return edadTexto(birthDateString);
   }
 
   loadPatient(id: number): void {

@@ -5,6 +5,7 @@ import { ApiService } from '../../services/api.service';
 import { Doctor } from '../../models/doctor';
 import { Appointment } from '../../models/appointment';
 import { environment } from '../../../environments/environment';
+import { RecentConsultation } from '../../models/recent-consultation';
 
 @Component({
   selector: 'app-dashboard',
@@ -22,16 +23,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   incomingCall: any = null;
   private ws: WebSocket | null = null;
 
-  mockAppointments = [
-    { id: 101, patientName: 'Ana Martinez', age: 27, time: '10:00 AM', status: 'programada' },
-    { id: 102, patientName: 'Luis García', age: 79, time: '11:15 AM', status: 'en_curso' },
-    { id: 103, patientName: 'Elena Torres', age: 43, time: '12:00 PM', status: 'programada' }
-  ];
-
-  recentHistory = [
-    { patientName: 'Sofia Mendez', date: 'Ayer', diagnostic: 'Control de hipertensión' },
-    { patientName: 'Pedro Alva', date: '17 Jun', diagnostic: 'Revisión anual' }
-  ];
+  recentHistory: RecentConsultation[] = [];
 
   constructor(
     private authService: AuthService,
@@ -44,6 +36,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.doctor = user;
     if (user) {
       this.loadAppointments(user.id);
+      this.loadRecentHistory();
       this.connectWebSocket(user.id);
     } else {
       this.router.navigate(['/login']);
@@ -100,6 +93,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.error = 'No se pudieron cargar tus citas. Intenta de nuevo en unos minutos.';
         this.loading = false;
       },
+    });
+  }
+
+  loadRecentHistory(): void {
+    this.apiService.getConsultasRecientes().subscribe({
+      next: (items) => (this.recentHistory = items),
+      error: () => (this.recentHistory = []),
     });
   }
 

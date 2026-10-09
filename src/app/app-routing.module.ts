@@ -10,6 +10,7 @@ import { DoctorRegisterComponent } from './components/doctor-register/doctor-reg
 import { PatientRegisterComponent } from './components/patient-register/patient-register.component';
 import { PatientDashboardComponent } from './components/patient-dashboard/patient-dashboard.component';
 import { ExpedientEditorComponent } from './components/expedient-editor/expedient-editor.component';
+import { BiometricEnrollComponent } from './components/biometric-enroll/biometric-enroll.component';
 import { AuthGuard } from './guards/auth.guard';
 
 const routes: Routes = [
@@ -24,6 +25,7 @@ const routes: Routes = [
   { path: 'videocall/:id', component: VideocallComponent, canActivate: [AuthGuard], data: { roles: ['doctor', 'paciente'] } },
   { path: 'expedient/:id', component: ExpedientComponent, canActivate: [AuthGuard], data: { roles: ['doctor', 'paciente'] } },
   { path: 'expedient-editor/:patientId/:appointmentId', component: ExpedientEditorComponent, canActivate: [AuthGuard], data: { roles: ['doctor'] } },
+  { path: 'mi-rostro', component: BiometricEnrollComponent, canActivate: [AuthGuard], data: { roles: ['doctor', 'paciente'] } },
   { path: '**', redirectTo: '/role-selector' },
 ];
 

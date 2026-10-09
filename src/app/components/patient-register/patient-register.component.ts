@@ -127,16 +127,8 @@ export class PatientRegisterComponent implements OnDestroy {
     this.loading = true;
     this.error = '';
 
-    // Calcular el promedio de los 3 embeddings capturados
-    const numFeatures = this.capturedEmbeddings[0].length;
-    const avgEmbedding = new Array(numFeatures).fill(0);
-    for (let i = 0; i < numFeatures; i++) {
-      let sum = 0;
-      for (let j = 0; j < this.capturedEmbeddings.length; j++) {
-        sum += this.capturedEmbeddings[j][i];
-      }
-      avgEmbedding[i] = sum / this.capturedEmbeddings.length;
-    }
+    // Promedio de las 3 capturas
+    const avgEmbedding = this.biometricService.averageEmbeddings(this.capturedEmbeddings);
 
     const patientData = {
       ...this.registerForm.value,
