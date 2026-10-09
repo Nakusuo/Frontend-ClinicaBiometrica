@@ -1,3 +1,7 @@
+<p align="center">
+  <a href="https://github.com/Nakusuo"><img src="https://raw.githubusercontent.com/Nakusuo/Nakusuo/main/assets/covers/Frontend-ClinicaBiometrica.svg" width="100%" alt="Frontend-ClinicaBiometrica — Nakusu"/></a>
+</p>
+
 # Frontend - Plataforma de Telemedicina Integrada
 
 Portal web de telemedicina desarrollado con **Angular 16+** y **Angular Material**. Incluye autenticación biométrica facial, gestión de citas y videollamadas WebRTC.
