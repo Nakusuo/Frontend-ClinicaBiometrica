@@ -1,9 +1,12 @@
 import { Injectable, EventEmitter } from '@angular/core';
 import SimplePeer from 'simple-peer';
 import { environment } from '../../environments/environment';
+import { AuthService } from './auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class WebRTCService {
+  constructor(private authService: AuthService) {}
+
   private peer: SimplePeer.Instance | null = null;
   private localStream: MediaStream | null = null;
   private ws: WebSocket | null = null;
@@ -26,6 +29,11 @@ export class WebRTCService {
     const wsUrl = `${environment.wsUrl.replace('http', 'ws')}/ws/${role}/${userId}`;
     console.log(`Connecting WebSocket signaling: ${wsUrl}`);
     this.ws = new WebSocket(wsUrl);
+
+    // El backend exige que el primer mensaje sea el token (no va en la URL para no quedar en logs)
+    this.ws.onopen = () => {
+      this.ws?.send(JSON.stringify({ type: 'auth', token: this.authService.getToken() }));
+    };
 
     this.ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);

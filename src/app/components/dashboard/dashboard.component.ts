@@ -4,6 +4,7 @@ import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
 import { Doctor } from '../../models/doctor';
 import { Appointment } from '../../models/appointment';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-dashboard',
@@ -14,6 +15,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   doctor: Doctor | null = null;
   appointments: Appointment[] = [];
   loading = true;
+  error = '';
 
   // Habilitar campos en tiempo real vacíos al inicio
   availabilityStatus = 'Disponible';
@@ -49,9 +51,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
   }
 
   connectWebSocket(doctorId: number): void {
-    const wsUrl = `ws://localhost:8000/ws/doctor/${doctorId}`;
+    const wsUrl = `${environment.wsUrl}/ws/doctor/${doctorId}`;
     console.log(`Doctor connecting to dashboard WS: ${wsUrl}`);
     this.ws = new WebSocket(wsUrl);
+
+    // El backend exige que el primer mensaje sea el token (no va en la URL para no quedar en logs)
+    this.ws.onopen = () => {
+      this.ws?.send(JSON.stringify({ type: 'auth', token: this.authService.getToken() }));
+    };
 
     this.ws.onmessage = (event) => {
       const msg = JSON.parse(event.data);
@@ -68,10 +75,15 @@ export class DashboardComponent implements OnInit, OnDestroy {
       }
     };
 
-    this.ws.onclose = () => {
+    this.ws.onclose = (event) => {
+      // 1008 = el backend rechazó el token; reintentar no sirve
+      if (event.code === 1008) {
+        this.error = 'No se pudo conectar al canal de llamadas. Vuelve a iniciar sesión.';
+        return;
+      }
       console.log('Doctor WS disconnected. Reconnecting in 3s...');
       setTimeout(() => {
-        if (this.doctor) {
+        if (this.doctor && this.ws) {
           this.connectWebSocket(doctorId);
         }
       }, 3000);
@@ -85,6 +97,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.loading = false;
       },
       error: () => {
+        this.error = 'No se pudieron cargar tus citas. Intenta de nuevo en unos minutos.';
         this.loading = false;
       },
     });
