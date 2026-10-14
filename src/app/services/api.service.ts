@@ -74,6 +74,10 @@ export class ApiService {
   }
 
   // Llamadas / Click to Call
+  getIceServers(citaId: number): Observable<{ iceServers: RTCIceServer[] }> {
+    return this.http.get<{ iceServers: RTCIceServer[] }>(`${this.apiUrl}/llamadas/${citaId}/ice-servers`);
+  }
+
   solicitarLlamada(pacienteId: number, citaId: number): Observable<any> {
     return this.http.post(`${this.apiUrl}/llamadas/solicitar`, { paciente_id: pacienteId, cita_id: citaId });
   }
