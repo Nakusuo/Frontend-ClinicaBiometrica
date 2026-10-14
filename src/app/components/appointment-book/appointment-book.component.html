@@ -3,7 +3,7 @@
     <div class="flex items-center justify-between">
       <h1 class="text-xl font-bold text-primary flex items-center gap-2">
         <span class="material-symbols-outlined">event_available</span>
-        Agendar cita
+        {{ citaId ? 'Reprogramar cita' : 'Agendar cita' }}
       </h1>
       <a routerLink="/patient-dashboard" class="text-xs text-slate-400 hover:text-primary">Volver</a>
     </div>
@@ -39,7 +39,7 @@
 
     <button type="submit" [disabled]="form.invalid || loading"
             class="w-full py-3.5 bg-primary text-white font-bold rounded-xl text-sm disabled:bg-slate-200 disabled:text-slate-400">
-      {{ loading ? 'Agendando…' : 'Confirmar cita' }}
+      {{ loading ? 'Guardando…' : (citaId ? 'Guardar cambios' : 'Confirmar cita') }}
     </button>
   </form>
 </div>

@@ -60,6 +60,18 @@ export class PatientDashboardComponent implements OnInit {
     }
   }
 
+  reprogramar(cita: Appointment): void {
+    this.router.navigate(['/agendar-cita'], { queryParams: { cita: cita.id } });
+  }
+
+  cancelar(cita: Appointment): void {
+    if (!this.patient || !confirm(`¿Cancelar tu cita del ${cita.fecha} a las ${cita.hora}?`)) return;
+    this.apiService.updateCitaEstado(cita.id, 'cancelada').subscribe({
+      next: () => this.loadAppointments(this.patient!.id),
+      error: () => (this.error = 'No se pudo cancelar la cita. Intenta de nuevo.'),
+    });
+  }
+
   viewMyExpedient(): void {
     if (this.patient) {
       this.router.navigate(['/expedient', this.patient.id]);

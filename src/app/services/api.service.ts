@@ -38,6 +38,10 @@ export class ApiService {
     return this.http.get<Appointment[]>(`${this.apiUrl}/citas/doctor/${doctorId}`);
   }
 
+  updateCita(id: number, cita: { paciente_id: number; doctor_id: number; fecha: string; hora: string; motivo: string }): Observable<Appointment> {
+    return this.http.put<Appointment>(`${this.apiUrl}/citas/${id}`, cita);
+  }
+
   getCitasPaciente(patientId: number): Observable<Appointment[]> {
     return this.http.get<Appointment[]>(`${this.apiUrl}/citas/paciente/${patientId}`);
   }
