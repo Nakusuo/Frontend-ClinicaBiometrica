@@ -79,15 +79,20 @@
         <div class="flex justify-between items-center pb-4 border-b border-outline-variant/20">
           <h2 class="text-lg font-bold text-primary flex items-center gap-2">
             <span class="material-symbols-outlined">clinical_notes</span>
-            Citas de Hoy
+            {{ verTodas ? 'Todas mis citas' : 'Citas de Hoy' }}
           </h2>
-          <span class="text-xs font-bold text-slate-400 uppercase">Ver todas</span>
+          <button type="button" (click)="verTodas = !verTodas" class="text-xs font-bold text-slate-400 hover:text-primary uppercase">
+            {{ verTodas ? 'Solo hoy' : 'Ver todas' }}
+          </button>
         </div>
 
         <div class="space-y-4">
           <div *ngIf="error" role="alert" class="px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">{{ error }}</div>
           <!-- Loop over actual appointments loaded from backend -->
-          <div *ngFor="let cita of appointments" 
+          <p *ngIf="!error && citasVisibles.length === 0" class="text-center py-8 text-sm text-on-surface-variant">
+            {{ verTodas ? 'Aún no tienes citas.' : 'No tienes citas para hoy.' }}
+          </p>
+          <div *ngFor="let cita of citasVisibles" 
                class="p-4 bg-surface-container-low hover:bg-surface-container-high/50 transition-all rounded-xl border border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 bg-primary-container text-white rounded-full flex items-center justify-center font-bold text-sm">
@@ -95,7 +100,7 @@
               </div>
               <div>
                 <h3 class="font-bold text-slate-800">{{ cita.patientName }}</h3>
-                <p class="text-xs text-on-surface-variant">{{ cita.age != null ? cita.age + ' años • ' : '' }}{{ cita.time }}</p>
+                <p class="text-xs text-on-surface-variant">{{ cita.age != null ? cita.age + ' años • ' : '' }}<span *ngIf="verTodas">{{ cita.fecha }} • </span>{{ cita.time }}</p>
               </div>
             </div>
 
