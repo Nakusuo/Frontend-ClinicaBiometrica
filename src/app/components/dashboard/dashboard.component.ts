@@ -6,6 +6,13 @@ import { Doctor } from '../../models/doctor';
 import { Appointment } from '../../models/appointment';
 import { environment } from '../../../environments/environment';
 import { RecentConsultation } from '../../models/recent-consultation';
+import { aFechaISO } from '../../utils/fechas';
+
+/** Citas de hoy, o todas ordenadas por fecha si verTodas está activo. */
+export function filtrarCitas(citas: Appointment[], verTodas: boolean, hoy = aFechaISO(new Date())): Appointment[] {
+  if (!verTodas) return citas.filter((c) => c.fecha === hoy);
+  return [...citas].sort((a, b) => (a.fecha || '').localeCompare(b.fecha || ''));
+}
 
 @Component({
   selector: 'app-dashboard',
@@ -15,6 +22,11 @@ import { RecentConsultation } from '../../models/recent-consultation';
 export class DashboardComponent implements OnInit, OnDestroy {
   doctor: Doctor | null = null;
   appointments: Appointment[] = [];
+  verTodas = false;
+
+  get citasVisibles(): Appointment[] {
+    return filtrarCitas(this.appointments, this.verTodas);
+  }
   loading = true;
   error = '';
 
