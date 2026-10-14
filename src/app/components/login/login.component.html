@@ -21,6 +21,7 @@
                  [value]="email"
                  (keyup.enter)="initiateBiometrics()"
                  type="email" 
+                 autocomplete="username"
                  class="w-full border-none focus:ring-0 bg-transparent p-0 text-slate-700 text-sm placeholder-slate-400 outline-none" 
                  placeholder="doctor@hospital.com" />
         </div>
@@ -55,7 +56,7 @@
                  placeholder="Contraseña" />
         </div>
         <button (click)="loginWithPassword()"
-                [disabled]="loading || !email || !password"
+                [disabled]="loading"
                 class="w-full py-3 bg-slate-700 hover:bg-slate-800 text-white font-bold rounded-xl text-sm transition-all disabled:bg-slate-200 disabled:text-slate-400 flex items-center justify-center gap-2">
           <span *ngIf="loading" class="animate-spin border-2 border-white/30 border-t-white w-4 h-4 rounded-full"></span>
           Ingresar
