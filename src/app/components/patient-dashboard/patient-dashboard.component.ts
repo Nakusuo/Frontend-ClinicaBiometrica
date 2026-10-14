@@ -14,6 +14,7 @@ export class PatientDashboardComponent implements OnInit {
   patient: Patient | null = null;
   appointments: Appointment[] = [];
   loading = true;
+  error = '';
 
   constructor(
     private authService: AuthService,
@@ -38,6 +39,7 @@ export class PatientDashboardComponent implements OnInit {
         this.loading = false;
       },
       error: () => {
+        this.error = 'No se pudieron cargar tus citas. Intenta de nuevo en unos minutos.';
         this.loading = false;
       }
     });

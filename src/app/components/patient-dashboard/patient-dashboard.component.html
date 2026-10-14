@@ -41,7 +41,9 @@
               <mat-spinner diameter="40"></mat-spinner>
             </div>
 
-            <div *ngIf="!loading && appointments.length === 0" class="text-center py-8 text-on-surface-variant">
+            <div *ngIf="error" role="alert" class="px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">{{ error }}</div>
+
+            <div *ngIf="!loading && !error && appointments.length === 0" class="text-center py-8 text-on-surface-variant">
               <span class="material-symbols-outlined text-4xl block mb-2 text-slate-400">event_busy</span>
               <p class="text-sm">No tienes consultas programadas.</p>
             </div>

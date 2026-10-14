@@ -15,10 +15,12 @@ export class LoginComponent implements OnInit, OnDestroy {
   error = '';
   cameraActive = false;
   role: 'doctor' | 'paciente' = 'doctor';
-  
+
   // Visual Guide fields
   email = '';
+  password = '';
   showBiometrics = false;
+  showPasswordLogin = false;
   private stream: MediaStream | null = null;
 
   constructor(
@@ -81,17 +83,9 @@ export class LoginComponent implements OnInit, OnDestroy {
         return;
       }
       this.authService.loginFacial(this.email, Array.from(embedding), this.role).subscribe({
-        next: (res) => {
-          const userObj = this.role === 'doctor' ? (res.doctor || res.user || res) : (res.patient || res.user || res);
-          this.authService.setSession(userObj, this.role);
-          if (this.role === 'doctor') {
-            this.router.navigate(['/dashboard']);
-          } else {
-            this.router.navigate(['/patient-dashboard']);
-          }
-        },
-        error: () => {
-          this.error = 'Rostro no reconocido';
+        next: (res) => this.startSession(res),
+        error: (err) => {
+          this.error = this.loginErrorMessage(err, 'Rostro no reconocido');
           this.loading = false;
         },
       });
@@ -101,35 +95,43 @@ export class LoginComponent implements OnInit, OnDestroy {
     }
   }
 
-  bypassLogin(): void {
+  togglePasswordLogin(): void {
+    this.showPasswordLogin = !this.showPasswordLogin;
+    this.error = '';
+  }
+
+  loginWithPassword(): void {
+    if (!this.email || !this.password) {
+      this.error = 'Ingresa tu correo y contraseña.';
+      return;
+    }
     this.loading = true;
     this.error = '';
-    if (this.role === 'doctor') {
-      const mockDoctor = {
-        id: 1,
-        nombre: 'Carlos',
-        apellido: 'Mendoza',
-        especialidad: 'Medicina General',
-        email: this.email || 'carlos.mendoza@clinica.com',
-        telefono: '+51 999 111 222'
-      };
-      this.authService.setSession(mockDoctor, 'doctor');
-      this.router.navigate(['/dashboard']);
-    } else {
-      const mockPatient = {
-        id: 1,
-        nombre: 'María',
-        apellido: 'Delgado',
-        dni: '76543210',
-        fechaNacimiento: '1995-10-20',
-        telefono: '+51 987 654 321',
-        email: this.email || 'maria.delgado@email.com',
-        direccion: 'Av. Larco 456, Miraflores'
-      };
-      this.authService.setSession(mockPatient, 'paciente');
-      this.router.navigate(['/patient-dashboard']);
+    this.authService.loginPassword(this.email, this.password, this.role).subscribe({
+      next: (res) => this.startSession(res),
+      error: (err) => {
+        this.error = this.loginErrorMessage(err, 'Correo o contraseña incorrectos.');
+        this.loading = false;
+      },
+    });
+  }
+
+  private startSession(res: any): void {
+    const userObj = this.role === 'doctor' ? res.doctor : res.patient;
+    if (!userObj || !res.access_token) {
+      this.error = 'Esta cuenta no corresponde al portal seleccionado.';
+      this.loading = false;
+      return;
     }
-    this.loading = false;
+    this.authService.setSession(userObj, this.role, res.access_token);
+    this.router.navigate([this.authService.homeFor(this.role)]);
+  }
+
+  private loginErrorMessage(err: any, fallback: string): string {
+    // 403 = médico registrado pero todavía sin aprobar
+    if (err?.status === 403 && err?.error?.detail) return err.error.detail;
+    if (err?.status === 0) return 'No se pudo conectar con el servidor.';
+    return fallback;
   }
 
   ngOnDestroy(): void {
