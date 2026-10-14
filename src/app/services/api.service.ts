@@ -3,6 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Patient } from '../models/patient';
+import { Doctor } from '../models/doctor';
 import { Appointment } from '../models/appointment';
 import { Expedient } from '../models/expedient';
 import { RecentConsultation } from '../models/recent-consultation';
@@ -23,7 +24,16 @@ export class ApiService {
     return this.http.post<Patient>(`${this.apiUrl}/pacientes`, patient);
   }
 
+  // Doctores
+  getDoctores(): Observable<Doctor[]> {
+    return this.http.get<Doctor[]>(`${this.apiUrl}/doctores/`);
+  }
+
   // Citas
+  createCita(cita: { paciente_id: number; doctor_id: number; fecha: string; hora: string; motivo: string }): Observable<Appointment> {
+    return this.http.post<Appointment>(`${this.apiUrl}/citas/`, cita);
+  }
+
   getCitas(doctorId: number): Observable<Appointment[]> {
     return this.http.get<Appointment[]>(`${this.apiUrl}/citas/doctor/${doctorId}`);
   }
