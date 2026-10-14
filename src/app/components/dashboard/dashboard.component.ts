@@ -5,6 +5,14 @@ import { ApiService } from '../../services/api.service';
 import { Doctor } from '../../models/doctor';
 import { Appointment } from '../../models/appointment';
 import { environment } from '../../../environments/environment';
+import { RecentConsultation } from '../../models/recent-consultation';
+import { aFechaISO } from '../../utils/fechas';
+
+/** Citas de hoy, o todas ordenadas por fecha si verTodas está activo. */
+export function filtrarCitas(citas: Appointment[], verTodas: boolean, hoy = aFechaISO(new Date())): Appointment[] {
+  if (!verTodas) return citas.filter((c) => c.fecha === hoy);
+  return [...citas].sort((a, b) => (a.fecha || '').localeCompare(b.fecha || ''));
+}
 
 @Component({
   selector: 'app-dashboard',
@@ -14,6 +22,11 @@ import { environment } from '../../../environments/environment';
 export class DashboardComponent implements OnInit, OnDestroy {
   doctor: Doctor | null = null;
   appointments: Appointment[] = [];
+  verTodas = false;
+
+  get citasVisibles(): Appointment[] {
+    return filtrarCitas(this.appointments, this.verTodas);
+  }
   loading = true;
   error = '';
 
@@ -22,16 +35,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   incomingCall: any = null;
   private ws: WebSocket | null = null;
 
-  mockAppointments = [
-    { id: 101, patientName: 'Ana Martinez', age: 27, time: '10:00 AM', status: 'programada' },
-    { id: 102, patientName: 'Luis García', age: 79, time: '11:15 AM', status: 'en_curso' },
-    { id: 103, patientName: 'Elena Torres', age: 43, time: '12:00 PM', status: 'programada' }
-  ];
-
-  recentHistory = [
-    { patientName: 'Sofia Mendez', date: 'Ayer', diagnostic: 'Control de hipertensión' },
-    { patientName: 'Pedro Alva', date: '17 Jun', diagnostic: 'Revisión anual' }
-  ];
+  recentHistory: RecentConsultation[] = [];
 
   constructor(
     private authService: AuthService,
@@ -44,6 +48,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.doctor = user;
     if (user) {
       this.loadAppointments(user.id);
+      this.loadRecentHistory();
       this.connectWebSocket(user.id);
     } else {
       this.router.navigate(['/login']);
@@ -100,6 +105,13 @@ export class DashboardComponent implements OnInit, OnDestroy {
         this.error = 'No se pudieron cargar tus citas. Intenta de nuevo en unos minutos.';
         this.loading = false;
       },
+    });
+  }
+
+  loadRecentHistory(): void {
+    this.apiService.getConsultasRecientes().subscribe({
+      next: (items) => (this.recentHistory = items),
+      error: () => (this.recentHistory = []),
     });
   }
 
