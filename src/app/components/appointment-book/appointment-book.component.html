@@ -1,0 +1,45 @@
+<div class="min-h-screen bg-slate-50 flex items-start justify-center px-4 py-10">
+  <form [formGroup]="form" (ngSubmit)="agendar()" class="w-full max-w-lg bg-white rounded-2xl shadow-sm border border-slate-200 p-6 space-y-5">
+    <div class="flex items-center justify-between">
+      <h1 class="text-xl font-bold text-primary flex items-center gap-2">
+        <span class="material-symbols-outlined">event_available</span>
+        {{ citaId ? 'Reprogramar cita' : 'Agendar cita' }}
+      </h1>
+      <a routerLink="/patient-dashboard" class="text-xs text-slate-400 hover:text-primary">Volver</a>
+    </div>
+
+    <label class="block space-y-1">
+      <span class="text-xs font-semibold text-slate-500">Médico</span>
+      <select formControlName="doctorId" class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 text-sm">
+        <option [ngValue]="0" disabled>Elige un médico</option>
+        <option *ngFor="let d of doctores" [ngValue]="d.id">Dr. {{ d.nombre }} {{ d.apellido }} · {{ d.especialidad }}</option>
+      </select>
+    </label>
+
+    <div class="grid grid-cols-2 gap-4">
+      <label class="block space-y-1">
+        <span class="text-xs font-semibold text-slate-500">Fecha</span>
+        <input type="date" formControlName="fecha" [min]="hoy" class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 text-sm" />
+      </label>
+      <label class="block space-y-1">
+        <span class="text-xs font-semibold text-slate-500">Hora</span>
+        <select formControlName="hora" class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 text-sm">
+          <option value="" disabled>Elige</option>
+          <option *ngFor="let h of horarios" [value]="h">{{ h }}</option>
+        </select>
+      </label>
+    </div>
+
+    <label class="block space-y-1">
+      <span class="text-xs font-semibold text-slate-500">Motivo de la consulta</span>
+      <textarea formControlName="motivo" rows="3" maxlength="200" class="w-full px-4 py-3 border border-slate-200 rounded-xl bg-slate-50 text-sm" placeholder="Ej.: control de presión"></textarea>
+    </label>
+
+    <div *ngIf="error" role="alert" class="px-4 py-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">{{ error }}</div>
+
+    <button type="submit" [disabled]="form.invalid || loading"
+            class="w-full py-3.5 bg-primary text-white font-bold rounded-xl text-sm disabled:bg-slate-200 disabled:text-slate-400">
+      {{ loading ? 'Guardando…' : (citaId ? 'Guardar cambios' : 'Confirmar cita') }}
+    </button>
+  </form>
+</div>

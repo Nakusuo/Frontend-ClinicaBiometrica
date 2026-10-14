@@ -3,8 +3,11 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 import { Patient } from '../models/patient';
+import { Doctor } from '../models/doctor';
 import { Appointment } from '../models/appointment';
 import { Expedient } from '../models/expedient';
+import { RecentConsultation } from '../models/recent-consultation';
+import { UserRole } from './auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -21,9 +24,22 @@ export class ApiService {
     return this.http.post<Patient>(`${this.apiUrl}/pacientes`, patient);
   }
 
+  // Doctores
+  getDoctores(): Observable<Doctor[]> {
+    return this.http.get<Doctor[]>(`${this.apiUrl}/doctores/`);
+  }
+
   // Citas
+  createCita(cita: { paciente_id: number; doctor_id: number; fecha: string; hora: string; motivo: string }): Observable<Appointment> {
+    return this.http.post<Appointment>(`${this.apiUrl}/citas/`, cita);
+  }
+
   getCitas(doctorId: number): Observable<Appointment[]> {
     return this.http.get<Appointment[]>(`${this.apiUrl}/citas/doctor/${doctorId}`);
+  }
+
+  updateCita(id: number, cita: { paciente_id: number; doctor_id: number; fecha: string; hora: string; motivo: string }): Observable<Appointment> {
+    return this.http.put<Appointment>(`${this.apiUrl}/citas/${id}`, cita);
   }
 
   getCitasPaciente(patientId: number): Observable<Appointment[]> {
@@ -45,6 +61,16 @@ export class ApiService {
 
   createExpediente(expedient: Expedient): Observable<Expedient> {
     return this.http.post<Expedient>(`${this.apiUrl}/expedientes`, expedient);
+  }
+
+  getConsultasRecientes(limit = 5): Observable<RecentConsultation[]> {
+    return this.http.get<RecentConsultation[]>(`${this.apiUrl}/expedientes/recientes`, { params: { limit } });
+  }
+
+  // Biometría del usuario con sesión abierta
+  registrarBiometria(role: UserRole, userId: number, embedding: number[]): Observable<unknown> {
+    const recurso = role === 'doctor' ? 'doctores' : 'pacientes';
+    return this.http.post(`${this.apiUrl}/${recurso}/${userId}/biometria`, { embedding });
   }
 
   // Llamadas / Click to Call

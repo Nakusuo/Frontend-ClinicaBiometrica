@@ -31,6 +31,8 @@ import { DoctorRegisterComponent } from './components/doctor-register/doctor-reg
 import { PatientRegisterComponent } from './components/patient-register/patient-register.component';
 import { PatientDashboardComponent } from './components/patient-dashboard/patient-dashboard.component';
 import { ExpedientEditorComponent } from './components/expedient-editor/expedient-editor.component';
+import { BiometricEnrollComponent } from './components/biometric-enroll/biometric-enroll.component';
+import { AppointmentBookComponent } from './components/appointment-book/appointment-book.component';
 import { AuthInterceptor } from './interceptors/auth.interceptor';
 
 @NgModule({
@@ -46,6 +48,8 @@ import { AuthInterceptor } from './interceptors/auth.interceptor';
     PatientRegisterComponent,
     PatientDashboardComponent,
     ExpedientEditorComponent,
+    BiometricEnrollComponent,
+    AppointmentBookComponent,
   ],
   imports: [
     BrowserModule,

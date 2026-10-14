@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
 import { Patient } from '../../models/patient';
+import { aFechaISO } from '../../utils/fechas';
 
 @Component({
   selector: 'app-patient-form',
@@ -39,7 +40,7 @@ export class PatientFormComponent implements OnInit {
     if (this.patientForm.invalid) return;
     this.loading = true;
     this.error = '';
-    const patient: Patient = this.patientForm.value;
+    const patient: Patient = { ...this.patientForm.value, fechaNacimiento: aFechaISO(this.patientForm.value.fechaNacimiento) };
     this.apiService.createPaciente(patient).subscribe({
       next: (created) => this.router.navigate(['/expedient', created.id]),
       error: () => { this.error = 'Error al registrar paciente'; this.loading = false; },
