@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { BiometricService } from '../../services/biometric.service';
 import { AuthService } from '../../services/auth.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-patient-register',
@@ -22,6 +23,9 @@ export class PatientRegisterComponent implements OnDestroy {
   error = '';
   private stream: MediaStream | null = null;
   private capturedEmbeddings: number[][] = [];
+
+  // Solo en desarrollo: permite registrarse sin cámara con un rostro simulado
+  readonly allowBypass = environment.allowBiometricBypass;
 
   constructor(
     private fb: FormBuilder,
@@ -162,6 +166,7 @@ export class PatientRegisterComponent implements OnDestroy {
   }
 
   bypassCaptures(): void {
+    if (!this.allowBypass) return;
     this.capturedEmbeddings = [
       new Array(128).fill(0.1),
       new Array(128).fill(0.2),
