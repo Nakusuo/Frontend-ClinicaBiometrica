@@ -10,6 +10,8 @@ import { BiometricService } from '../../services/biometric.service';
 })
 export class LoginComponent implements OnInit, OnDestroy {
   @ViewChild('video') videoRef!: ElementRef<HTMLVideoElement>;
+  @ViewChild('emailInput') emailRef?: ElementRef<HTMLInputElement>;
+  @ViewChild('passwordInput') passwordRef?: ElementRef<HTMLInputElement>;
 
   loading = false;
   error = '';
@@ -101,6 +103,9 @@ export class LoginComponent implements OnInit, OnDestroy {
   }
 
   loginWithPassword(): void {
+    // El autocompletado del navegador llena los campos sin disparar (input): leemos el valor real
+    this.email = this.emailRef?.nativeElement.value || this.email;
+    this.password = this.passwordRef?.nativeElement.value || this.password;
     if (!this.email || !this.password) {
       this.error = 'Ingresa tu correo y contraseña.';
       return;
