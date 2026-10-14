@@ -5,6 +5,8 @@ import { environment } from '../../environments/environment';
 import { Patient } from '../models/patient';
 import { Appointment } from '../models/appointment';
 import { Expedient } from '../models/expedient';
+import { RecentConsultation } from '../models/recent-consultation';
+import { UserRole } from './auth.service';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -45,6 +47,16 @@ export class ApiService {
 
   createExpediente(expedient: Expedient): Observable<Expedient> {
     return this.http.post<Expedient>(`${this.apiUrl}/expedientes`, expedient);
+  }
+
+  getConsultasRecientes(limit = 5): Observable<RecentConsultation[]> {
+    return this.http.get<RecentConsultation[]>(`${this.apiUrl}/expedientes/recientes`, { params: { limit } });
+  }
+
+  // Biometría del usuario con sesión abierta
+  registrarBiometria(role: UserRole, userId: number, embedding: number[]): Observable<unknown> {
+    const recurso = role === 'doctor' ? 'doctores' : 'pacientes';
+    return this.http.post(`${this.apiUrl}/${recurso}/${userId}/biometria`, { embedding });
   }
 
   // Llamadas / Click to Call

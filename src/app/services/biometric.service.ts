@@ -26,6 +26,16 @@ export class BiometricService {
     return detections ? detections.descriptor : null;
   }
 
+  /** Promedia varias capturas en un solo descriptor (más estable que una sola foto). */
+  averageEmbeddings(samples: number[][]): number[] {
+    const size = samples[0].length;
+    const average = new Array(size).fill(0);
+    for (const sample of samples) {
+      for (let i = 0; i < size; i++) average[i] += sample[i] / samples.length;
+    }
+    return average;
+  }
+
   async startCamera(videoElement: HTMLVideoElement): Promise<MediaStream | null> {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({

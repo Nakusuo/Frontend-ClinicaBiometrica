@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { BiometricService } from '../../services/biometric.service';
 import { AuthService } from '../../services/auth.service';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-doctor-register',
@@ -26,6 +27,9 @@ export class DoctorRegisterComponent implements OnDestroy {
     'Cardiología', 'Pediatría', 'Neurología',
     'Medicina General', 'Dermatología',
   ];
+
+  // Solo en desarrollo: permite registrarse sin cámara con un rostro simulado
+  readonly allowBypass = environment.allowBiometricBypass;
 
   constructor(
     private fb: FormBuilder,
@@ -108,16 +112,8 @@ export class DoctorRegisterComponent implements OnDestroy {
     this.loading = true;
     this.error = '';
 
-    // Calcular el promedio de los 3 embeddings capturados
-    const numFeatures = this.capturedEmbeddings[0].length;
-    const avgEmbedding = new Array(numFeatures).fill(0);
-    for (let i = 0; i < numFeatures; i++) {
-      let sum = 0;
-      for (let j = 0; j < this.capturedEmbeddings.length; j++) {
-        sum += this.capturedEmbeddings[j][i];
-      }
-      avgEmbedding[i] = sum / this.capturedEmbeddings.length;
-    }
+    // Promedio de las 3 capturas
+    const avgEmbedding = this.biometricService.averageEmbeddings(this.capturedEmbeddings);
 
     const doctorData = {
       ...this.registerForm.value,
@@ -147,6 +143,7 @@ export class DoctorRegisterComponent implements OnDestroy {
   }
 
   bypassCaptures(): void {
+    if (!this.allowBypass) return;
     this.capturedEmbeddings = [
       new Array(128).fill(0.1),
       new Array(128).fill(0.2),

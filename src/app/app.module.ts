@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { HttpClientModule } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { ReactiveFormsModule } from '@angular/forms';
 
 // Angular Material
@@ -31,6 +31,8 @@ import { DoctorRegisterComponent } from './components/doctor-register/doctor-reg
 import { PatientRegisterComponent } from './components/patient-register/patient-register.component';
 import { PatientDashboardComponent } from './components/patient-dashboard/patient-dashboard.component';
 import { ExpedientEditorComponent } from './components/expedient-editor/expedient-editor.component';
+import { BiometricEnrollComponent } from './components/biometric-enroll/biometric-enroll.component';
+import { AuthInterceptor } from './interceptors/auth.interceptor';
 
 @NgModule({
   declarations: [
@@ -45,6 +47,7 @@ import { ExpedientEditorComponent } from './components/expedient-editor/expedien
     PatientRegisterComponent,
     PatientDashboardComponent,
     ExpedientEditorComponent,
+    BiometricEnrollComponent,
   ],
   imports: [
     BrowserModule,
@@ -67,7 +70,7 @@ import { ExpedientEditorComponent } from './components/expedient-editor/expedien
     MatExpansionModule,
     MatCheckboxModule,
   ],
-  providers: [],
+  providers: [{ provide: HTTP_INTERCEPTORS, useClass: AuthInterceptor, multi: true }],
   bootstrap: [AppComponent],
 })
 export class AppModule {}

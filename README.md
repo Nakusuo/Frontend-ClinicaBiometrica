@@ -16,7 +16,9 @@ Lo hicimos en equipo para el curso de **Laboratorio de Integración de Sistemas*
 
 En vez de contraseña, la página prende la cámara y usa **face-api.js** para detectar el rostro y convertirlo en un vector de números (un *embedding*). Ese vector viaja al backend, que lo compara con el que se guardó al registrarse: si se parecen lo suficiente, entras. La foto nunca sale del navegador, solo los números.
 
-Para probarlo sin cámara hay un botón **Bypass (Sin Cámara)**.
+Si aún no registraste tu rostro, o no tienes cámara, puedes **Ingresar con contraseña**. El rostro se puede registrar después desde **Mi rostro** (`/mi-rostro`) en cualquiera de los dos paneles.
+
+En desarrollo, los registros muestran **Simular captura** para crear cuentas sin cámara. Lo controla `allowBiometricBypass` en `src/environments/environment.ts` y nunca se activa en producción.
 
 ## Dos portales, uno para cada lado
 
@@ -39,6 +41,8 @@ src/app/
 │                 # expedient, expedient-editor, videocall, registros...
 ├── services/     # auth, api, biometric (face-api.js), webrtc
 ├── guards/       # protección de rutas
+├── interceptors/ # añade el token JWT a cada petición
+├── utils/        # fechas y edad
 └── models/       # paciente, doctor, cita, expediente
 ```
 
@@ -60,7 +64,7 @@ El backend trae datos de prueba: el médico `doctor@email.com` y la paciente `ma
 
 ```bash
 npm run build      # build de producción en dist/
-npm test           # tests
+npx ng test --watch=false --browsers=ChromeHeadless   # tests (GitHub Actions corre lo mismo)
 ```
 
 </details>
