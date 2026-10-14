@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
 import { Patient } from '../../models/patient';
+import { edadTexto } from '../../utils/fechas';
 import { Expedient } from '../../models/expedient';
 
 @Component({
@@ -59,20 +60,7 @@ export class ExpedientEditorComponent implements OnInit {
   }
 
   getAge(birthDateString?: string): string {
-    if (!birthDateString) return 'No especificada';
-    try {
-      const today = new Date();
-      const birthDate = new Date(birthDateString);
-      if (isNaN(birthDate.getTime())) return 'No especificada';
-      let age = today.getFullYear() - birthDate.getFullYear();
-      const m = today.getMonth() - birthDate.getMonth();
-      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-        age--;
-      }
-      return age + ' años';
-    } catch {
-      return 'No especificada';
-    }
+    return edadTexto(birthDateString);
   }
 
   loadPatientInfo(): void {
@@ -94,7 +82,7 @@ export class ExpedientEditorComponent implements OnInit {
     this.expedientForm.valueChanges.subscribe(() => {
       this.autosaveText = 'Guardando...';
       this.autosaveClass = 'text-slate-400';
-      
+
       if (timeout) clearTimeout(timeout);
       timeout = setTimeout(() => {
         const now = new Date();
