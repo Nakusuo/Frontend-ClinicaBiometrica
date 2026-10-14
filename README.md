@@ -68,3 +68,7 @@ npx ng test --watch=false --browsers=ChromeHeadless   # tests (GitHub Actions co
 ```
 
 </details>
+
+## Proceso (CMMI)
+
+El proyecto sigue CMMI nivel 3. La documentación del proceso (gestión de configuración, calidad, requisitos, plan) vive en el repo del backend: [docs/cmmi](https://github.com/Nakusuo/Backend-ClinicaBiometrica/tree/develop/docs/cmmi). Para contribuir: issue → rama `feature/<issue>-<tema>` desde `develop` → PR con la plantilla.
