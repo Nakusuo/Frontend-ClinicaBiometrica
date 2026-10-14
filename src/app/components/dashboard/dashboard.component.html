@@ -25,7 +25,7 @@
       <div>
         <h2 class="text-base font-bold text-slate-400 uppercase tracking-wider">Estado de Disponibilidad</h2>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex flex-wrap items-center gap-2">
         <button (click)="setAvailability('Disponible')"
                 [ngClass]="availabilityStatus === 'Disponible' ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-slate-100 text-slate-600 border-slate-200'"
                 class="px-4 py-2 rounded-full text-sm font-bold border transition-all">
