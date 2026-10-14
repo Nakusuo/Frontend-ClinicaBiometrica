@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import { ApiService } from '../../services/api.service';
 import { Doctor } from '../../models/doctor';
@@ -24,6 +24,8 @@ export class AppointmentBookComponent implements OnInit {
   horarios = HORARIOS;
   hoy = aFechaISO(new Date())!;
   loading = false;
+  /** Id de la cita que se reprograma; null si es una cita nueva. */
+  citaId: number | null = null;
   error = '';
 
   form = this.fb.nonNullable.group({
@@ -37,7 +39,8 @@ export class AppointmentBookComponent implements OnInit {
     private fb: FormBuilder,
     private authService: AuthService,
     private apiService: ApiService,
-    private router: Router
+    private router: Router,
+    private route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
@@ -45,6 +48,18 @@ export class AppointmentBookComponent implements OnInit {
       next: (doctores) => (this.doctores = doctores),
       error: () => (this.error = 'No se pudo cargar la lista de médicos.'),
     });
+    const id = Number(this.route.snapshot.queryParamMap.get('cita'));
+    if (id) {
+      this.citaId = id;
+      this.apiService.getCita(id).subscribe({
+        next: (c) => {
+          this.form.patchValue({ doctorId: c.doctorId, fecha: c.fecha, hora: c.hora, motivo: c.motivo });
+          // Al reprogramar no se cambia de médico
+          this.form.controls.doctorId.disable();
+        },
+        error: () => (this.error = 'No se pudo cargar la cita a reprogramar.'),
+      });
+    }
   }
 
   agendar(): void {
@@ -57,14 +72,14 @@ export class AppointmentBookComponent implements OnInit {
     this.loading = true;
     this.error = '';
     const { doctorId, fecha, hora, motivo } = this.form.getRawValue();
-    this.apiService
-      .createCita({ paciente_id: paciente.id, doctor_id: doctorId, fecha, hora, motivo })
-      .subscribe({
-        next: () => this.router.navigate(['/patient-dashboard']),
-        error: (err) => {
-          this.error = err?.error?.detail || 'No se pudo agendar la cita. Intenta de nuevo.';
-          this.loading = false;
-        },
-      });
+    const cita = { paciente_id: paciente.id, doctor_id: doctorId, fecha, hora, motivo };
+    const peticion = this.citaId ? this.apiService.updateCita(this.citaId, cita) : this.apiService.createCita(cita);
+    peticion.subscribe({
+      next: () => this.router.navigate(['/patient-dashboard']),
+      error: (err) => {
+        this.error = err?.error?.detail || 'No se pudo guardar la cita. Intenta de nuevo.';
+        this.loading = false;
+      },
+    });
   }
 }
