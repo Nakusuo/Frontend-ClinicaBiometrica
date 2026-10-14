@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { WebRTCService } from '../../services/webrtc.service';
+import { resolverIceServers } from '../../services/ice-servers';
 import { ApiService } from '../../services/api.service';
 import { AuthService } from '../../services/auth.service';
 import { Patient } from '../../models/patient';
@@ -93,7 +94,7 @@ export class VideocallComponent implements OnInit, OnDestroy {
       }
 
       this.webrtcService.connectSignaling(this.role!, currentUserId, targetRole, targetUserId);
-      this.webrtcService.createPeer(initiator, targetRole, targetUserId);
+      this.webrtcService.createPeer(initiator, targetRole, targetUserId, await resolverIceServers(this.apiService.getIceServers(this.cita.id)));
       this.inCall = true;
     } catch (err: any) { 
       console.error('Error starting WebRTC call:', err);

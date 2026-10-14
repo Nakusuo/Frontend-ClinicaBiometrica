@@ -3,6 +3,8 @@ import SimplePeer from 'simple-peer';
 import { environment } from '../../environments/environment';
 import { AuthService } from './auth.service';
 
+import { ICE_POR_DEFECTO } from './ice-servers';
+
 @Injectable({ providedIn: 'root' })
 export class WebRTCService {
   constructor(private authService: AuthService) {}
@@ -50,12 +52,12 @@ export class WebRTCService {
     };
   }
 
-  createPeer(initiator: boolean, targetRole: string, targetId: number): void {
+  createPeer(initiator: boolean, targetRole: string, targetId: number, iceServers: RTCIceServer[] = ICE_POR_DEFECTO): void {
     this.peer = new SimplePeer({
       initiator,
       trickle: false,
       config: {
-        iceServers: [{ urls: ['stun:stun.l.google.com:19302'] }],
+        iceServers,
       },
     });
 
